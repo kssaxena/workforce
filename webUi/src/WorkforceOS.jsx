@@ -10,6 +10,8 @@ import StructureSection from "./components/StructureSection";
 import IntelligenceSection from "./components/IntelligenceSection";
 import CompaniesSection from "./components/CompaniesSection";
 import ClosingSection from "./components/ClosingSection";
+import Button from "./components/Button"
+import InputBox from "./components/Input";
 
 export default function WorkforceOS() {
 	return (
