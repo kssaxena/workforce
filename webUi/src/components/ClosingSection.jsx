@@ -94,6 +94,7 @@ export default function ClosingSection() {
 						<span>Company</span>
 						<span>Security</span>
 						<span>Contact</span>
+						
 					</div>
 					<div className="text-[10px]">© 2026 WorkforceOS</div>
 				</div>
