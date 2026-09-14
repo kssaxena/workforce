@@ -12,7 +12,7 @@ import CompaniesSection from "./components/CompaniesSection";
 import ClosingSection from "./components/ClosingSection";
 import Button from "./components/Button"
 import InputBox from "./components/Input";
-import Dashboard from "./pages/Dashboard/Dashboard";
+
 
 export default function WorkforceOS() {
 	return (
@@ -28,7 +28,7 @@ export default function WorkforceOS() {
 				<IntelligenceSection />
 				<CompaniesSection />
 				<ClosingSection />
-				<Dashboard/>
+				
 			</main>
 		</div>
 	);

@@ -90,11 +90,11 @@ export default function ClosingSection() {
 						WorkforceOS
 					</div>
 					<div className="flex gap-5 text-[12px]">
-						<span>Platform</span>
-						<span>Company</span>
-						<span>Security</span>
-						<span>Contact</span>
-						
+						<a href="#">Platform</a>
+						<a href="#">Company</a>
+						<a href="#">Setting</a>
+						<a href="#">Contact</a>
+						<a href="/dashboard"> Dashboard </a>
 					</div>
 					<div className="text-[10px]">© 2026 WorkforceOS</div>
 				</div>

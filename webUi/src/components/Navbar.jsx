@@ -1,7 +1,11 @@
 import React from "react";
 import { ArrowUpRight } from "lucide-react";
+import Button from "./Button";
+import Login from "./Login";
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
+	const navigate = useNavigate();
 	return (
 		<header className="sticky top-0 z-50 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
 			<div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-5 sm:px-8">
@@ -32,10 +36,13 @@ export default function Navbar() {
 					))}
 				</nav>
 
-				<div className="flex items-center gap-2">
-					<button className="hidden text-[12px] font-bold text-slate-500 sm:block">
-						Sign in
-					</button>
+				<div className="flex items-center gap-1">
+					<Button
+						LabelName="Sign in"
+						onClick={() => navigate("/login")}
+						variant="secondary"
+						className="border-none"
+					/>
 					<button className="group inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1.5 text-[12px] font-bold text-white shadow-md shadow-blue-200">
 						Get started
 						<ArrowUpRight

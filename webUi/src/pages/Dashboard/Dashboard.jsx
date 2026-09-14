@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { FaBars, FaHome, FaSignOutAlt, FaTimes } from "react-icons/fa";
-import { IoLogOut } from "react-icons/io5";
 import { dashboardSectionList } from "../../constant/constant";
 import Overview from "./DashboardComponent/Overview";
 import Designation from "./DashboardComponent/Designation";
