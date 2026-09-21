@@ -1,0 +1,36 @@
+{
+  "name": "workflow_os_backend",
+  "version": "1.0.0",
+  "description": "this is a backend of a crm or employee management portal as it provides all access to multi-level corporate office structure.",
+  "keywords": [
+    "backend",
+    "os",
+    "workflow",
+    "crm",
+    "ems"
+  ],
+  "license": "ISC",
+  "author": "mr_saxena",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
+  },
+  "dependencies": {
+    "axios": "^1.20.0",
+    "bcrypt": "^6.0.0",
+    "compression": "^1.8.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "crypto": "^1.0.1",
+    "dotenv": "^18.0.1",
+    "express": "^5.2.1",
+    "imagekit": "^6.0.0",
+    "joi": "^18.2.9",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.6.0",
+    "mongoose": "^9.10.1",
+    "multer": "^2.4.0",
+    "nodemon": "^3.1.14"
+  }
+}
