@@ -7,9 +7,16 @@ import { PERMISSIONS } from "../../rbac/constants/permission.js";
 
 import validate from "../../../core/middleware/validate.js";
 
-import { checkInSchema } from "../validators/attendance.validator.js";
+import {
+  checkInSchema,
+  checkOutSchema,
+} from "../validators/attendance.validator.js";
 
-import { checkInController } from "../controllers/attendance.controller.js";
+import {
+  checkInController,
+  checkOutController,
+  getMyAttendanceController,
+} from "../controllers/attendance.controller.js";
 
 const router = Router();
 
@@ -20,6 +27,19 @@ router.post(
   authorize(PERMISSIONS.ATTENDANCE_CREATE),
   validate(checkInSchema),
   checkInController,
+);
+
+router.post(
+  "/check-out",
+  authorize(PERMISSIONS.ATTENDANCE_CREATE),
+  validate(checkOutSchema),
+  checkOutController,
+);
+
+router.get(
+  "/my",
+  authorize(PERMISSIONS.ATTENDANCE_READ),
+  getMyAttendanceController,
 );
 
 export default router;
