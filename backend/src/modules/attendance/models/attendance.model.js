@@ -56,6 +56,12 @@ const attendanceSchema = new mongoose.Schema(
     },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    scheduledWorkingMinutes: { type: Number, default: 0, min: 0 },
+    lateMinutes: { type: Number, default: 0, min: 0 },
+    isLate: { type: Boolean, default: false },
+    earlyCheckoutMinutes: { type: Number, default: 0, min: 0 },
+    isEarlyCheckout: { type: Boolean, default: false },
+    overtimeMinutes: { type: Number, default: 0, min: 0 },
   },
   {
     timestamps: true,
