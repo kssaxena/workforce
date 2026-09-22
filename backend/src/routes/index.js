@@ -6,6 +6,7 @@ import {
   departmentRoutes,
   organizationUnitRoutes,
 } from "../modules/organization/index.js";
+import { employeeRoutes } from "../modules/employee/index.js";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use("/companies", companyRoutes);
 router.use("/auth", authRoutes);
 router.use("/departments", departmentRoutes);
 router.use("/organization-units", organizationUnitRoutes);
+router.use("/employees", employeeRoutes);
 
 export default router;
