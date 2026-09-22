@@ -7,7 +7,10 @@ import {
   organizationUnitRoutes,
 } from "../modules/organization/index.js";
 import { employeeRoutes } from "../modules/employee/index.js";
-import { attendanceRoutes } from "../modules/attendance/index.js";
+import {
+  attendanceRoutes,
+  workScheduleRoutes,
+} from "../modules/attendance/index.js";
 
 const router = Router();
 
@@ -18,5 +21,6 @@ router.use("/departments", departmentRoutes);
 router.use("/organization-units", organizationUnitRoutes);
 router.use("/employees", employeeRoutes);
 router.use("/attendance", attendanceRoutes);
+router.use("/work-schedules", workScheduleRoutes);
 
 export default router;
