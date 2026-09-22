@@ -11,6 +11,8 @@ import Employee from "../models/employee.model.js";
 
 import { hashPassword } from "../../auth/services/password.service.js";
 
+import { WorkSchedule } from "../../attendance/models/workSchedule.model.js";
+
 const validateObjectId = (id, message) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new Error(message);
@@ -183,41 +185,75 @@ export const createEmployee = async ({ companyId, createdBy, data }) => {
        * ----------------------------------------------------
        */
 
+      let workScheduleId = data.workScheduleId;
+
+      if (workScheduleId) {
+        const schedule = await WorkSchedule.findOne({
+          _id: workScheduleId,
+          companyId,
+          isActive: true,
+        }).session(session);
+
+        if (!schedule) {
+          throw new ApiError(400, "Invalid or inactive work schedule");
+        }
+      } else {
+        const defaultSchedule = await WorkSchedule.findOne({
+          companyId,
+          isDefault: true,
+          isActive: true,
+        }).session(session);
+
+        if (!defaultSchedule) {
+          throw new ApiError(
+            400,
+            "Company does not have a default work schedule",
+          );
+        }
+
+        workScheduleId = defaultSchedule._id;
+      }
+
       const [employee] = await Employee.create(
         [
           {
-            userId: user._id,
             companyId,
 
-            employeeCode: employeeCode.toUpperCase(),
+            userId: user._id,
 
-            firstName,
-            lastName,
+            employeeCode: data.employeeCode,
 
-            dateOfBirth,
-            gender,
-            joiningDate,
+            firstName: data.firstName,
+            lastName: data.lastName,
 
-            employmentType: employmentType || "FULL_TIME",
+            dateOfBirth: data.dateOfBirth,
+            gender: data.gender,
 
-            employmentStatus: "ACTIVE",
+            joiningDate: data.joiningDate,
 
-            designation,
+            employmentType: data.employmentType,
 
-            departmentId: departmentId || null,
+            designation: data.designation,
 
-            organizationUnitId: organizationUnitId || null,
+            departmentId: data.departmentId,
 
-            reportsTo: reportsTo || null,
+            organizationUnitId: data.organizationUnitId,
 
-            contact,
-            address,
+            reportsTo: data.reportsTo,
 
-            createdBy,
-            updatedBy: createdBy,
+            workScheduleId,
+
+            contact: data.contact,
+
+            address: data.address,
+
+            createdBy: userId,
+            updatedBy: userId,
           },
         ],
-        { session },
+        {
+          session,
+        },
       );
 
       /*

@@ -150,3 +150,99 @@ export const deactivateWorkSchedule = async ({
 
   return schedule;
 };
+
+export const initializeDefaultWorkSchedule = async ({
+  companyId,
+  userId,
+  timezone = "Asia/Kolkata",
+  session = null,
+}) => {
+  const existingSchedule = await WorkSchedule.findOne({
+    companyId,
+    isDefault: true,
+  }).session(session);
+
+  if (existingSchedule) {
+    return existingSchedule;
+  }
+
+  const days = [
+    {
+      dayOfWeek: 0,
+      isWorkingDay: false,
+      startTime: "00:00",
+      endTime: "00:00",
+      breakMinutes: 0,
+    },
+
+    {
+      dayOfWeek: 1,
+      isWorkingDay: true,
+      startTime: "09:00",
+      endTime: "18:00",
+      breakMinutes: 60,
+    },
+
+    {
+      dayOfWeek: 2,
+      isWorkingDay: true,
+      startTime: "09:00",
+      endTime: "18:00",
+      breakMinutes: 60,
+    },
+
+    {
+      dayOfWeek: 3,
+      isWorkingDay: true,
+      startTime: "09:00",
+      endTime: "18:00",
+      breakMinutes: 60,
+    },
+
+    {
+      dayOfWeek: 4,
+      isWorkingDay: true,
+      startTime: "09:00",
+      endTime: "18:00",
+      breakMinutes: 60,
+    },
+
+    {
+      dayOfWeek: 5,
+      isWorkingDay: true,
+      startTime: "09:00",
+      endTime: "18:00",
+      breakMinutes: 60,
+    },
+
+    {
+      dayOfWeek: 6,
+      isWorkingDay: false,
+      startTime: "00:00",
+      endTime: "00:00",
+      breakMinutes: 0,
+    },
+  ];
+
+  const [schedule] = await WorkSchedule.create(
+    [
+      {
+        companyId,
+        name: "Default Work Schedule",
+        code: "DEFAULT",
+        description: "Default Monday to Friday work schedule",
+        timezone,
+        days,
+        isDefault: true,
+        isActive: true,
+        createdBy: userId,
+        updatedBy: userId,
+      },
+    ],
+    {
+      session,
+    },
+  );
+
+  return schedule;
+};
