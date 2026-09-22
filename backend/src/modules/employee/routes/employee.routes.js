@@ -9,7 +9,11 @@ import validate from "../../../core/middleware/validate.js";
 
 import { createEmployeeSchema } from "../validators/employee.validator.js";
 
-import { createEmployeeController } from "../controllers/employee.controller.js";
+import {
+  createEmployeeController,
+  getEmployeeController,
+  getEmployeesController,
+} from "../controllers/employee.controller.js";
 
 const router = Router();
 
@@ -20,6 +24,14 @@ router.post(
   authorize(PERMISSIONS.EMPLOYEE_CREATE),
   validate(createEmployeeSchema),
   createEmployeeController,
+);
+
+router.get("/", authorize(PERMISSIONS.EMPLOYEE_READ), getEmployeesController);
+
+router.get(
+  "/:employeeId",
+  authorize(PERMISSIONS.EMPLOYEE_READ),
+  getEmployeeController,
 );
 
 export default router;
