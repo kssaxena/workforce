@@ -54,6 +54,12 @@ const employeeSchema = new mongoose.Schema(
       ref: "Employee",
       default: null,
     },
+    workScheduleId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "WorkSchedule",
+      default: null,
+      index: true,
+    },
 
     contact: {
       phone: { type: String, trim: true },
