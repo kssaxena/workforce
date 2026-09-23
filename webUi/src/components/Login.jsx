@@ -1,18 +1,41 @@
-import React from "react";
+import React, { useState } from "react";
 import InputBox from "./Input";
 import Button from "./Button";
-import { Link, useNavigate } from "react-router-dom";
+import {
+	Link,
+	useNavigate,
+	useParams,
+	useSearchParams,
+} from "react-router-dom";
+import { loginHeader } from "../constant/constant";
 
 const Login = () => {
 	const navigate = useNavigate();
+	const { type } = useParams();
+
+	const [formData, setFormData] = useState({
+		email: "",
+		password: "",
+		role: "",
+		employeeId: "",
+		companyId: "",
+	});
+
+	const handleChange = (e) => {
+		const { name, value } = e.target;
+
+		setFormData((prev) => ({
+			...prev,
+			[name]: value,
+		}));
+	};
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
 
-		// Login API yahan call kar sakte ho
+		console.log("Form Data:", formData);
 
-		// Example:
-		// navigate("/dashboard");
+		navigate("/dashboard");
 	};
 
 	return (
@@ -36,36 +59,174 @@ const Login = () => {
 						</div>
 
 						{/* Heading */}
-						<div className="">
+						<div>
 							<h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-								Welcome Back
+								{loginHeader[type]?.heading || "Welcome Back"}
 							</h1>
 
 							<p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
-								Sign in to your account and continue managing your workforce.
+								{loginHeader[type]?.description ||
+									"Sign in to your account and continue managing your workforce."}
 							</p>
 						</div>
 
 						{/* Login Form */}
 						<form onSubmit={handleSubmit} className="space-y-1">
-							{/* Email */}
-							<InputBox
-								labelName="Email"
-								name="email"
-								type="email"
-								placeholder="Enter your email"
-								required
-							/>
+							{/* ================= COMPANY LOGIN ================= */}
+							{type === "company" && (
+								<>
+									<InputBox
+										labelName="Company Email"
+										name="email"
+										type="email"
+										placeholder="Enter your company email"
+										value={formData.email}
+										onChange={handleChange}
+										required
+									/>
 
-							{/* Password */}
-							<InputBox
-								labelName="Password"
-								name="password"
-								type="password"
-								placeholder="Enter your password"
-								required
-								className=""
-							/>
+									<InputBox
+										labelName="Password"
+										name="password"
+										type="password"
+										placeholder="Enter your password"
+										value={formData.password}
+										onChange={handleChange}
+										required
+									/>
+								</>
+							)}
+
+							{/* ================= COMPANY TEAM LOGIN ================= */}
+							{type === "companyTeam" && (
+								<>
+									<InputBox
+										labelName="Company Id"
+										name="companyId"
+										type="text"
+										placeholder="Enter your company Id"
+										value={formData.companyId}
+										onChange={handleChange}
+										required
+									/>
+
+									<InputBox
+										labelName="Role"
+										name="role"
+										type="select"
+										value={formData.role}
+										onChange={handleChange}
+										options={[
+											{
+												label: "HR",
+												value: "hr",
+											},
+											{
+												label: "Executive",
+												value: "executive",
+											},
+										]}
+										required
+									/>
+
+									<InputBox
+										labelName="Password"
+										name="password"
+										type="password"
+										placeholder="Enter your password"
+										value={formData.password}
+										onChange={handleChange}
+										required
+									/>
+								</>
+							)}
+
+							{/* ================= MANAGER / TEAM LEADER LOGIN ================= */}
+							{type === "manager" && (
+								<>
+									<InputBox
+										labelName="Company Id"
+										name="companyId"
+										type="text"
+										placeholder="Enter your company id"
+										value={formData.companyId}
+										onChange={handleChange}
+										required
+									/>
+
+									<InputBox
+										labelName="Role"
+										name="role"
+										type="select"
+										value={formData.role}
+										onChange={handleChange}
+										options={[
+											{
+												label: "Manager",
+												value: "manager",
+											},
+											{
+												label: "Team Leader",
+												value: "teamLeader",
+											},
+										]}
+										required
+									/>
+
+									<InputBox
+										labelName="Password"
+										name="password"
+										type="password"
+										placeholder="Enter your password"
+										value={formData.password}
+										onChange={handleChange}
+										required
+									/>
+								</>
+							)}
+
+							{/* ================= EMPLOYEE LOGIN ================= */}
+							{type === "employee" && (
+								<>
+									<InputBox
+										labelName="Employee ID"
+										name="employeeId"
+										type="text"
+										placeholder="Enter your employee ID"
+										value={formData.employeeId}
+										onChange={handleChange}
+										required
+									/>
+									<InputBox
+										labelName="Email"
+										name="email"
+										type="email"
+										placeholder="Enter your employee ID"
+										value={formData.email}
+										onChange={handleChange}
+										required
+									/>
+									<InputBox
+										labelName="Contact number"
+										name="contact"
+										type="text"
+										placeholder="Enter your contact number"
+										value={formData.employeeId}
+										onChange={handleChange}
+										required
+									/>
+
+									<InputBox
+										labelName="Password"
+										name="password"
+										type="password"
+										placeholder="Enter your password"
+										value={formData.password}
+										onChange={handleChange}
+										required
+									/>
+								</>
+							)}
 
 							{/* Remember + Forgot */}
 							<div className="flex items-center justify-between">
@@ -100,7 +261,7 @@ const Login = () => {
 							<p className="text-xs text-slate-400">
 								Don't have an account?{" "}
 								<a
-									href=""
+									href="/register"
 									className="font-semibold text-blue-600 hover:text-blue-700"
 								>
 									Create account

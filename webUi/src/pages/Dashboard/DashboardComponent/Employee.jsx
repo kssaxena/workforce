@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { EmployeeFieldCard } from "../../../constant/constant";
 import { FaArrowUp, FaClock } from "react-icons/fa";
 import InputBox from "../../../components/Input";
 import Button from "../../../components/Button";
+import Popup from "../../../components/Popup";
 
 const days = [
 	"Sunday",
@@ -23,59 +24,164 @@ const statusStyles = {
 };
 
 const Employee = ({ data = [] }) => {
+	const [showForm, setShowForm] = useState(false);
+
+	const [attendanceFields, setAttendanceFields] = useState({
+		presentToday: "",
+		presentRemaining: "",
+		lateEntry: "",
+		onTime: "",
+		onLeave: "",
+		approvedLeaves: "",
+		absent: "",
+		withoutInformation: "",
+	});
+
+	useEffect(() => {
+		const navigation = performance.getEntriesByType("navigation")[0];
+
+		// Agar page reload hua hai
+		if (navigation?.type === "reload") {
+			sessionStorage.removeItem("employeeAttendanceFields");
+
+			setAttendanceFields({
+				presentToday: "",
+				presentRemaining: "",
+				lateEntry: "",
+				onTime: "",
+				onLeave: "",
+				approvedLeaves: "",
+				absent: "",
+				withoutInformation: "",
+			});
+
+			return;
+		}
+
+		const savedData = sessionStorage.getItem("employeeAttendanceFields");
+
+		if (savedData) {
+			try {
+				setAttendanceFields(JSON.parse(savedData));
+			} catch (error) {
+				console.error("Invalid attendance data:", error);
+				sessionStorage.removeItem("employeeAttendanceFields");
+			}
+		}
+	}, []);
+
+	const handleChange = (e) => {
+		const { name, value } = e.target;
+
+		setAttendanceFields((prev) => ({
+			...prev,
+			[name]: value,
+		}));
+	};
+
+	const handleSave = () => {
+		sessionStorage.setItem(
+			"employeeAttendanceFields",
+			JSON.stringify(attendanceFields),
+		);
+
+		setShowForm(false);
+	};
+
+	const getAttendanceTextColor = (presentToday, absentToday) => {
+		const PT = Number(presentToday);
+		const AT = Number(absentToday);
+
+		if (PT > AT) {
+			return "text-red-600";
+		}
+
+		if (PT === AT) {
+			return "text-yellow-600";
+		}
+		
+
+		return "text-green-600";
+	};
+
 	return (
 		<div className="space-y-6 p-4">
 			{/* Heading */}
-			<div className="flex flex-col items-start justify-start gap-1">
-				<h1 className="text-2xl font-semibold text-blue-500">
-					Employee Attendance
-				</h1>
+				<div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+					<div>
+						<p className="text-sm text-slate-400">Monday, 8 September 2026</p>
 
-				<p className="text-[10px] text-slate-400">
-					Analyze attendance records of employee
-				</p>
-			</div>
+						<h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+							Good Morning, {data.name || "Akanksha"}!
+						</h1>
+
+						<p className="mt-1 text-sm text-slate-500">
+							Here's what's happening with your Workforce today.
+						</p>
+					</div> 
+				</div>
 
 			{/* Attendance Cards */}
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-				{EmployeeFieldCard?.map((item, index) => (
-					<div
-						key={item?.id || index}
-						className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-					>
-						<div className="flex items-start justify-between">
-							<div>
-								<p className="text-xs font-medium text-slate-500">
-									{item?.title || ""}
-								</p>
+				{EmployeeFieldCard?.map((item, index) => {
+					const value =
+						attendanceFields[item.key] !== ""
+							? attendanceFields[item.key]
+							: item.value;
 
-								<h3 className="mt-2 text-2xl font-bold text-slate-900">
-									{item?.value || "0"}
-								</h3>
+					const remainingValue =
+						attendanceFields[item.remainingKey] !== ""
+							? attendanceFields[item.remainingKey]
+							: item.remainingValue || item.change;
+
+					const textColor = getAttendanceTextColor(
+						attendanceFields.presentToday,
+						attendanceFields.approvedLeaves,
+						attendanceFields.lateEntry,
+						attendanceFields.absent,
+					);
+
+					return (
+						<div
+							key={item?.id || index}
+							className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+						>
+							<div className="flex items-start justify-between">
+								<div>
+									<p className="text-xs font-medium text-slate-500">
+										{item?.title || ""}
+									</p>
+
+									<h3 className="mt-2 text-2xl font-bold text-slate-900">
+										{value}
+									</h3>
+								</div>
+
+								<div
+									className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+										item?.iconBg || "bg-slate-100"
+									} ${item?.iconColor || "text-slate-500"}`}
+								>
+									{item?.icon || null}
+								</div>
 							</div>
 
-							<div
-								className={`flex h-11 w-11 items-center justify-center rounded-xl ${
-									item?.iconBg || "bg-slate-100"
-								} ${item?.iconColor || "text-slate-500"}`}
-							>
-								{item?.icon || null}
+							<div className="mt-4 flex items-center gap-2">
+								<span
+									className={`flex items-center gap-1 text-xs font-semibold ${textColor}`}
+								>
+									<FaArrowUp className="text-[9px]" />
+
+									{remainingValue}
+								</span>
+
+								<span className="text-[11px] text-slate-400">
+									{item?.message || ""}
+								</span>
 							</div>
 						</div>
-
-						<div className="mt-4 flex items-center gap-2">
-							<span className="flex items-center gap-1 text-xs font-semibold text-green-600">
-								<FaArrowUp className="text-[9px]" />
-
-								{item?.remainingValue || "0"}
-							</span>
-
-							<span className="text-[11px] text-slate-400">
-								{item?.message || ""}
-							</span>
-						</div>
-					</div>
-				))}
+					);
+				})}
 			</div>
 
 			{/* Attendance Table */}
@@ -229,6 +335,117 @@ const Employee = ({ data = [] }) => {
 					</table>
 				</div>
 			</div>
+
+			<Popup
+				isOpen={showForm}
+				onClose={() => setShowForm(false)}
+				title="Add Attendance Data"
+			>
+				<div className="space-y-4">
+					{/* Present Today */}
+					<h1 className="text-lg font-semibold">Present Today Field</h1>
+
+					<div>
+						<InputBox
+							labelName="Value"
+							name="presentToday"
+							type="text"
+							placeholder="Enter Value"
+							value={attendanceFields.presentToday}
+							onChange={handleChange}
+						/>
+
+						<InputBox
+							labelName="Remaining Value"
+							name="presentRemaining"
+							type="text"
+							placeholder="Enter remaining value"
+							value={attendanceFields.presentRemaining}
+							onChange={handleChange}
+						/>
+					</div>
+
+					{/* Late Entry */}
+					<h1 className="text-lg font-semibold">Late Entry Field</h1>
+
+					<div>
+						<InputBox
+							labelName="Late Entry"
+							name="lateEntry"
+							type="text"
+							placeholder="Enter late entry value"
+							value={attendanceFields.lateEntry}
+							onChange={handleChange}
+						/>
+
+						<InputBox
+							labelName="On Time"
+							name="onTime"
+							type="text"
+							placeholder="Enter on time Value"
+							value={attendanceFields.onTime}
+							onChange={handleChange}
+						/>
+					</div>
+
+					{/* On Leave */}
+					<h1 className="text-lg font-semibold">On Leave Field</h1>
+
+					<div>
+						<InputBox
+							labelName="On leave"
+							name="onLeave"
+							type="text"
+							placeholder="Enter late on leave value"
+							value={attendanceFields.onLeave}
+							onChange={handleChange}
+						/>
+
+						<InputBox
+							labelName="Approved Leaves"
+							name="approvedLeaves"
+							type="text"
+							placeholder="Enter approved leaves Value"
+							value={attendanceFields.approvedLeaves}
+							onChange={handleChange}
+						/>
+					</div>
+
+					{/* Absent */}
+					<h1 className="text-lg font-semibold">Absent Field</h1>
+
+					<div>
+						<InputBox
+							labelName="Absent"
+							name="absent"
+							type="text"
+							placeholder="Enter late absent value"
+							value={attendanceFields.absent}
+							onChange={handleChange}
+						/>
+
+						<InputBox
+							labelName="Without Information"
+							name="withoutInformation"
+							type="text"
+							placeholder="Enter without information Value"
+							value={attendanceFields.withoutInformation}
+							onChange={handleChange}
+						/>
+					</div>
+
+					{/* Buttons */}
+					<div className="flex justify-end gap-3">
+						<Button
+							LabelName="Cancel"
+							variant="secondary"
+							onClick={() => setShowForm(false)}
+						/>
+
+						<Button LabelName="Save" onClick={handleSave} />
+					</div>
+				</div>
+			</Popup>
 		</div>
 	);
 };

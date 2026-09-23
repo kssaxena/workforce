@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Button from "../../../components/Button";
 import {
 	FaCalendarAlt,
@@ -7,34 +7,70 @@ import {
 	FaUser,
 	FaArrowUp,
 	FaChevronRight,
-   
 } from "react-icons/fa";
 
-
 import { stats, meetings, recentActivity } from "../../../constant/constant";
+import {
+	Chart as ChartJS,
+	CategoryScale,
+	LinearScale,
+	BarElement,
+	Tooltip,
+	Legend,
+} from "chart.js";
+
+import { Bar } from "react-chartjs-2";
+import InputBox from "../../../components/Input";
+import EmployeeProfile from "./EmployeeProfile";
 
 const Overview = (data) => {
+	const [totalEmployee, setTotalEmployee] = useState(null);
+	const [presentToday, setPresentToday] = useState(null);
+	const [onLeave, setOnLeave] = useState(null);
+	const absent = totalEmployee-presentToday;
+	const lateEntryEmployee = absent - onLeave;
+	const [viewEmployeeProfile, setViewEmployeeProfile] = useState(false);
+	const [activeSection, setActiveSection] =  useState(false);
+
+	ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+
 	return (
 		<div className="w-full h-full overflow-y-auto">
-			<section className="p-4 sm:p-6 lg:p-8">
+			<section className="p-6 lg:p-8">
 				{/* Greeting */}
 				<div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
 					<div>
 						<p className="text-sm text-slate-400">Monday, 8 September 2026</p>
 
 						<h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-							Good Morning, {data.name}!
+							Good Morning, {data.name || "Akanksha"}!
 						</h1>
 
 						<p className="mt-1 text-sm text-slate-500">
-							Here's what's happening with your meetings today.
+							Here's what's happening with your Workforce today.
 						</p>
 					</div>
-
-					<button className="flex w-fit items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700">
-						<FaCalendarAlt />
-						Book a Meeting
-					</button>
+				</div>
+				<div className="flex justify-start items-center mb-4 gap-4">
+					<input
+						onChange={(e) => setTotalEmployee(e.target.value)}
+						type="text"
+						placeholder="Enter total employee value"
+						className="text-[10px] placeholder:text-black p-4 w-56 h-6 bg-blue-100 rounded-lg border-slate-100  "
+					/>
+					<input
+						onChange={(e) => setPresentToday(e.target.value)}
+						type="text"
+						placeholder="Enter present employee value"
+						className="text-[10px] placeholder:text-black p-4  w-56 h-6 bg-blue-100 rounded-lg border-slate-100  "
+					/>
+					<input
+						onChange={(e) => setOnLeave(e.target.value)}
+						type="text"
+						placeholder="Enter present employee value"
+						className="text-[10px] placeholder:text-black p-4  w-56 h-6 bg-blue-100 rounded-lg border-slate-100  "
+					/>
+					
 				</div>
 
 				{/* ================= STATS ================= */}
@@ -50,8 +86,23 @@ const Overview = (data) => {
 										{stat.title}
 									</p>
 
-									<h3 className="mt-2 text-2xl font-bold text-slate-900">
-										{stat.value}
+									<h3 className="mt-2 text-2xl font-bold text-slate-900 ">
+										{stat.id === 1 ? totalEmployee : ""}
+										{stat.id === 2 ? (
+											<div className="text-green-800">{presentToday}</div>
+										) : (
+											""
+										)}
+										{stat.id === 3 ? (
+											<div className="text-yellow-800">{onLeave}</div>
+										) : (
+											""
+										)}
+										{stat.id === 4 ? (
+											<div className="text-green-800">{lateEntryEmployee}</div>
+										) : (
+											""
+										)}
 									</h3>
 								</div>
 
@@ -62,18 +113,113 @@ const Overview = (data) => {
 								</div>
 							</div>
 
-							<div className="mt-4 flex items-center gap-2">
-								<span className="flex items-center gap-1 text-xs font-semibold text-green-600">
-									<FaArrowUp className="text-[9px]" />
-									{stat.change}
-								</span>
+							<div className="mt-4 flex justify-between items-center gap-2">
+								<div className="flex gap-1 items-center">
+									<span className="flex items-center gap-1 text-xs font-semibold text-green-600">
+										{/* <FaArrowUp className="text-[9px]" /> */}
+										{stats.change}
+										{stat.id === 2 ? (
+											<div className="text-red-700">{absent}</div>
+										) : (
+											""
+										)}
+									</span>
 
-								<span className="text-[11px] text-slate-400">
-									vs. last week
-								</span>
+									<span className="text-[11px] text-slate-400">
+										{stat.id === 2 ? (
+											<div className="text-slate-700">Absent</div>
+										) : (
+											""
+										)}
+									</span>
+								</div>
 							</div>
 						</div>
 					))}
+				</div>
+
+				{/* Total Employee */}
+				<div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+					<div className="flex items-center justify-between">
+						<div>
+							<h2 className="font-bold text-slate-900">Total Employees</h2>
+
+							<p className="mt-1 text-xs text-slate-400">
+								Manage your employees
+							</p>
+						</div>
+
+						<button className="text-xs font-semibold text-blue-600">
+							View All →
+						</button>
+					</div>
+
+					<div className="mt-5 overflow-x-auto">
+						<table className="w-full min-w-[700px] text-left">
+							<thead>
+								<tr className="border-y border-slate-100 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400">
+									<th className="px-4 py-3">Serial Number</th>
+									<th className="px-4 py-3">Name</th>
+									<th className="px-4 py-3">Designation</th>
+									<th className="px-4 py-3">present/Absent</th>
+									<th className="px-4 py-3">Action</th>
+								</tr>
+							</thead>
+
+							<tbody>
+								{recentActivity.map((item) => (
+									<tr
+										key={`${item.serialNumber}-${item.name}`}
+										className="border-b border-slate-100 last:border-0"
+									>
+										<td className="px-4 py-4 text-xs text-slate-500">
+											{item.serialNumber}
+										</td>
+
+										<td className="px-4 py-4">
+											<div className="flex items-center gap-2">
+												{/* <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">
+													{item.name.charAt(0)}
+												</div> */}
+
+												<span className="text-xs font-semibold text-slate-700">
+													{item.name}
+												</span>
+											</div>
+										</td>
+
+										<td className="px-4 py-4 text-xs text-slate-500">
+											{item.designation}
+										</td>
+
+										<td className="px-4 py-4">
+											<span
+												className={`
+														rounded-full px-3 py-1 text-[10px] font-semibold
+														${
+															item.status === "Present"
+																? "bg-green-50 text-green-600"
+																: "bg-blue-50 text-red-600"
+														}
+													`}
+											>
+												{item.status}
+											</span>
+										</td>
+
+										<td className="px-4 py-4">
+											<button onClick={() => setViewEmployeeProfile(true)}
+											 className="flex gap-1 text-sm justify-center items-center text-slate-400 hover:text-blue-600">
+												View
+												<FaChevronRight />
+											</button>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+						
+					</div>
 				</div>
 
 				{/* ================= GRID ================= */}
@@ -98,31 +244,93 @@ const Overview = (data) => {
 							</select>
 						</div>
 
-						{/* CSS Chart */}
-						<div className="mt-8 flex h-56 items-end gap-3 border-b border-slate-100 px-2 sm:gap-6">
-							{[
-								["Mon", "45%"],
-								["Tue", "58%"],
-								["Wed", "72%"],
-								["Thu", "61%"],
-								["Fri", "84%"],
-								["Sat", "52%"],
-								["Sun", "68%"],
-							].map(([day, height]) => (
-								<div
-									key={day}
-									className="flex h-full flex-1 flex-col justify-end"
-								>
-									<div
-										className="w-full rounded-t-xl bg-blue-500 transition hover:bg-blue-600"
-										style={{ height }}
-									/>
+						{/* Bar Chart */}
+						<div className="mt-8 h-56">
+							<Bar
+								data={{
+									labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
 
-									<p className="py-3 text-center text-[10px] text-slate-400">
-										{day}
-									</p>
-								</div>
-							))}
+									datasets: [
+										{
+											label: "Attendance",
+											data: [45, 58, 72, 61, 84, 52, 68],
+
+											backgroundColor: "#3b82f6",
+											hoverBackgroundColor: "#2563eb",
+
+											borderRadius: 8,
+
+											borderSkipped: false,
+										},
+									],
+								}}
+								options={{
+									responsive: true,
+
+									maintainAspectRatio: false,
+
+									plugins: {
+										legend: {
+											display: false,
+										},
+
+										tooltip: {
+											callbacks: {
+												label: function (context) {
+													return `${context.raw}%`;
+												},
+											},
+										},
+									},
+
+									scales: {
+										x: {
+											grid: {
+												display: false,
+											},
+
+											border: {
+												display: false,
+											},
+
+											ticks: {
+												color: "#94a3b8",
+												font: {
+													size: 10,
+												},
+											},
+										},
+
+										y: {
+											beginAtZero: true,
+
+											max: 100,
+
+											ticks: {
+												stepSize: 20,
+
+												color: "#94a3b8",
+
+												font: {
+													size: 10,
+												},
+
+												callback: function (value) {
+													return `${value}%`;
+												},
+											},
+
+											grid: {
+												color: "#f1f5f9",
+											},
+
+											border: {
+												display: false,
+											},
+										},
+									},
+								}}
+							/>
 						</div>
 					</div>
 
@@ -169,87 +377,6 @@ const Overview = (data) => {
 								</div>
 							))}
 						</div>
-					</div>
-				</div>
-
-				{/* ================= RECENT ACTIVITY ================= */}
-				<div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-					<div className="flex items-center justify-between">
-						<div>
-							<h2 className="font-bold text-slate-900">Recent Activity</h2>
-
-							<p className="mt-1 text-xs text-slate-400">
-								Latest meetings and activities
-							</p>
-						</div>
-
-						<button className="text-xs font-semibold text-blue-600">
-							View All →
-						</button>
-					</div>
-
-					<div className="mt-5 overflow-x-auto">
-						<table className="w-full min-w-[700px] text-left">
-							<thead>
-								<tr className="border-y border-slate-100 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400">
-									<th className="px-4 py-3">Date & Time</th>
-									<th className="px-4 py-3">Client</th>
-									<th className="px-4 py-3">Event</th>
-									<th className="px-4 py-3">Status</th>
-									<th className="px-4 py-3">Action</th>
-								</tr>
-							</thead>
-
-							<tbody>
-								{recentActivity.map((item) => (
-									<tr
-										key={`${item.date}-${item.client}`}
-										className="border-b border-slate-100 last:border-0"
-									>
-										<td className="px-4 py-4 text-xs text-slate-500">
-											{item.date}
-										</td>
-
-										<td className="px-4 py-4">
-											<div className="flex items-center gap-2">
-												<div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">
-													{item.client.charAt(0)}
-												</div>
-
-												<span className="text-xs font-semibold text-slate-700">
-													{item.client}
-												</span>
-											</div>
-										</td>
-
-										<td className="px-4 py-4 text-xs text-slate-500">
-											{item.event}
-										</td>
-
-										<td className="px-4 py-4">
-											<span
-												className={`
-														rounded-full px-3 py-1 text-[10px] font-semibold
-														${
-															item.status === "Completed"
-																? "bg-green-50 text-green-600"
-																: "bg-blue-50 text-blue-600"
-														}
-													`}
-											>
-												{item.status}
-											</span>
-										</td>
-
-										<td className="px-4 py-4">
-											<button className="text-slate-400 hover:text-blue-600">
-												<FaChevronRight />
-											</button>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
 					</div>
 				</div>
 

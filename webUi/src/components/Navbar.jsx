@@ -1,11 +1,13 @@
 import React from "react";
+import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import Button from "./Button";
-import Login from "./Login";
 import { useNavigate } from "react-router-dom";
+
 
 export default function Navbar() {
 	const navigate = useNavigate();
+	const [showLoginOptions, setShowLoginOptions] = useState(false);
 	return (
 		<header className="sticky top-0 z-50 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
 			<div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-5 sm:px-8">
@@ -37,12 +39,65 @@ export default function Navbar() {
 				</nav>
 
 				<div className="flex items-center gap-1">
-					<Button
-						LabelName="Sign in"
-						onClick={() => navigate("/login")}
-						variant="secondary"
-						className="border-none"
-					/>
+					<div className="relative">
+						<Button
+							LabelName="Sign in"
+							onClick={() => setShowLoginOptions((prev) => !prev)}
+							variant="secondary"
+							className="border-none"
+						/>
+
+						{showLoginOptions && (
+							<div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
+								<button
+									onClick={() => navigate("/login/company")}
+									className="w-full rounded-lg px-4 py-3 text-left transition hover:bg-blue-50"
+								>
+									<p className="text-sm font-semibold text-slate-800">
+										Company
+									</p>
+									<p className="text-xs text-slate-400">
+										Company administrator login
+									</p>
+								</button>
+
+								<button
+									onClick={() => navigate("/login/companyTeam")}
+									className="w-full rounded-lg px-4 py-3 text-left transition hover:bg-blue-50"
+								>
+									<p className="text-sm font-semibold text-slate-800">
+										Company Team
+									</p>
+									<p className="text-xs text-slate-400">HR / Executive login</p>
+								</button>
+
+								<button
+									onClick={() => navigate("/login/manager")}
+									className="w-full rounded-lg px-4 py-3 text-left transition hover:bg-blue-50"
+								>
+									<p className="text-sm font-semibold text-slate-800">
+										Manager / Team Leader
+									</p>
+									<p className="text-xs text-slate-400">
+										Manager or Team Leader login
+									</p>
+								</button>
+
+								<button
+									onClick={() => navigate("/login/employee")}
+									className="w-full rounded-lg px-4 py-3 text-left transition hover:bg-blue-50"
+								>
+									<p className="text-sm font-semibold text-slate-800">
+										Employee
+									</p>
+									<p className="text-xs text-slate-400">
+										Employee workspace login
+									</p>
+								</button>
+							</div>
+						)}
+					</div>
+
 					<button className="group inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1.5 text-[12px] font-bold text-white shadow-md shadow-blue-200">
 						Get started
 						<ArrowUpRight

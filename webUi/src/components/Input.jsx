@@ -6,12 +6,12 @@ const InputBox = ({
 	className = "",
 	type = "text",
 	name = "",
-	value = "",
-	onChange = () => {},
+	value,
+	onChange,
 	required = false,
 	disabled = false,
-	onClick = () => {},
-	onKeyDown = () => {},
+	onClick,
+	onKeyDown,
 	labelClassName = "",
 	passwordHint = "",
 	textArea = false,
@@ -121,6 +121,7 @@ const InputBox = ({
 					id={name}
 					name={name}
 					type="file"
+					value={value}
 					accept={accept}
 					multiple={multiple}
 					onChange={onChange}

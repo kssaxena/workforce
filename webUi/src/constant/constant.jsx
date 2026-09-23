@@ -1,4 +1,12 @@
-import { FaCalendarAlt, FaCheckCircle, FaRupeeSign, FaUsers } from "react-icons/fa";
+import {
+	FaCalendarAlt,
+	FaCheckCircle,
+	FaHourglassStart,
+	FaLastfmSquare,
+	FaRProject,
+	FaRupeeSign,
+	FaUsers,
+} from "react-icons/fa";
 import { GoVerified } from "react-icons/go";
 
 export const dashboardSectionList = [
@@ -6,22 +14,50 @@ export const dashboardSectionList = [
 		name: "Overview",
 		icon: <GoVerified />,
 		query: "overview",
+		roles: ["company", "company team", "manager", "employee"],
 	},
 	{
 		name: "Designation",
 		icon: <GoVerified />,
 		query: "designation",
 		subCategory: ["HR", "Manager", "Team Leader", "Executive"],
+		roles: ["company", "company team", "manager"],
 	},
 	{
 		name: "Company",
 		icon: <GoVerified />,
 		query: "companyLevel",
+		roles: ["company", "company team", "manager"],
 	},
 	{
 		name: "Employee",
 		icon: <GoVerified />,
 		query: "employee",
+		roles: ["company", "company team", "manager"],
+	},
+	{
+		name: "Subscription",
+		icon: <GoVerified />,
+		query: "subscription",
+		roles: ["company", "company team", "manager"],
+	},
+	{
+		name: "Addition",
+		icon: <GoVerified />,
+		query: "addition",
+		roles: ["company"],
+	},
+	{
+		name: "Access",
+		icon: <GoVerified />,
+		query: "access",
+		roles: ["company", "company team", "manager"],
+	},
+	{
+		name: "Grant",
+		icon: <GoVerified />,
+		query: "grant",
+		roles: ["company", "company team", "manager"],
 	},
 ];
 
@@ -129,15 +165,16 @@ export const employeeFields = [
 
 export const stats = [
 	{
-		title: "Total Meetings",
+		id: 1,
+		title: "Total Employee",
 		value: "24",
-		change: "+12%",
 		icon: <FaUsers />,
 		iconBg: "bg-blue-50",
 		iconColor: "text-blue-600",
 	},
 	{
-		title: "Upcoming",
+		id: 2,
+		title: "Present Today",
 		value: "8",
 		change: "+33%",
 		icon: <FaCalendarAlt />,
@@ -145,7 +182,8 @@ export const stats = [
 		iconColor: "text-purple-600",
 	},
 	{
-		title: "Completed",
+		id: 3,
+		title: "On Leave",
 		value: "15",
 		change: "+8%",
 		icon: <FaCheckCircle />,
@@ -153,10 +191,11 @@ export const stats = [
 		iconColor: "text-green-600",
 	},
 	{
-		title: "Revenue",
-		value: "₹42,500",
+		id: 4,
+		title: "Late Entry",
+		value: "5",
 		change: "+18%",
-		icon: <FaRupeeSign />,
+		icon: <FaHourglassStart />,
 		iconBg: "bg-orange-50",
 		iconColor: "text-orange-500",
 	},
@@ -193,65 +232,87 @@ export const meetings = [
 ];
 export const recentActivity = [
 	{
-		date: "08 Sep 2026, 10:00 AM",
-		client: "Rohan Mehta",
-		event: "Client Consultation",
-		status: "Completed",
+		serialNumber: "1",
+		name: "Rohan Mehta",
+		designation: "Team Leader",
+		status: "Present",
 	},
 	{
-		date: "08 Sep 2026, 12:00 PM",
-		client: "Ananya Sharma",
-		event: "Project Discussion",
-		status: "Upcoming",
+		serialNumber: "2",
+		name: "Akanksha Kumari",
+		designation: "UI/UX Developer",
+		status: "Absent",
 	},
 	{
-		date: "07 Sep 2026, 03:30 PM",
-		client: "Vikram Singh",
-		event: "Follow Up Meeting",
-		status: "Completed",
+		serialNumber: "3",
+		name: "Mouli Das",
+		designation: "Salseforce Developer",
+		status: "Present",
 	},
 	{
-		date: "07 Sep 2026, 11:15 AM",
-		client: "Neha Kapoor",
-		event: "Strategy Call",
-		status: "Completed",
+		serialNumber: "4",
+		name: "Neha Kapoor",
+		designation: "HR",
+		status: "Present",
 	},
 ];
 export const EmployeeFieldCard = [
 	{
+		key: "presentToday",
+		remainingKey: "presentRemaining",
 		title: "Present Today",
-		value: "40",
-		remainingValue: "124",
 		message: "People Remaining",
 		icon: <FaUsers />,
 		iconBg: "bg-blue-50",
 		iconColor: "text-blue-600",
 	},
 	{
+		key: "lateEntry",
+		remainingKey: "onTime",
 		title: "Late Entry",
-		value: "8",
-		remainingValue: "12",
 		message: "People are on time",
 		icon: <FaCalendarAlt />,
 		iconBg: "bg-purple-50",
 		iconColor: "text-purple-600",
 	},
 	{
+		key: "onLeave",
+		remainingKey: "approvedLeaves",
 		title: "On Leave",
-		value: "4",
-		remainingValue: "0",
 		message: "Approved Leaves",
 		icon: <FaCheckCircle />,
 		iconBg: "bg-green-50",
 		iconColor: "text-green-600",
 	},
 	{
+		key: "absent",
+		remainingKey: "withoutInformation",
 		title: "Absent",
-		value: "01",
-		change: "0",
 		message: "Without Information",
 		icon: <FaRupeeSign />,
 		iconBg: "bg-orange-50",
 		iconColor: "text-orange-500",
 	},
 ];
+
+export const loginHeader = {
+	company: {
+		title: "Company Sign In",
+		description: "Sign in to manage your organization and workforce.",
+	},
+
+	companyTeam: {
+		title: "Company Team Sign In",
+		description: "Access your HR and workforce management tools.",
+	},
+
+	manager: {
+		title: "Manager Sign In",
+		description: "Manage your team and track workforce performance.",
+	},
+
+	employee: {
+		title: "Employee Sign In",
+		description: "Access your profile, attendance and work information.",
+	},
+};
