@@ -1,333 +1,159 @@
-import React, { useState, useEffect } from "react";
-import { EmployeeFieldCard } from "../../../constant/constant";
-import { FaArrowUp, FaClock } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import { employeeFields } from "../../../constant/constant";
 import InputBox from "../../../components/Input";
 import Button from "../../../components/Button";
 import Popup from "../../../components/Popup";
+import EmployeeProfile from "./EmployeeProfile";
 
-const days = [
-	"Sunday",
-	"Monday",
-	"Tuesday",
-	"Wednesday",
-	"Thursday",
-	"Friday",
-	"Saturday",
-];
-
-const statusStyles = {
-	present: "bg-emerald-50 text-emerald-600",
-	late: "bg-amber-50 text-amber-600",
-	leave: "bg-purple-50 text-purple-600",
-	absent: "bg-red-50 text-red-500",
-	active: "bg-emerald-50 text-emerald-600",
-};
-
-const Employee = ({ data = [] }) => {
+const Employee = ({ onViewEmployeeProfile }) => {
 	const [showForm, setShowForm] = useState(false);
-
-	const [attendanceFields, setAttendanceFields] = useState({
-		presentToday: "",
-		presentRemaining: "",
-		lateEntry: "",
-		onTime: "",
-		onLeave: "",
-		approvedLeaves: "",
-		absent: "",
-		withoutInformation: "",
-	});
+	const [formData, setFormData] = useState({});
+	const [employees, setEmployees] = useState([]);
 
 	useEffect(() => {
-		const navigation = performance.getEntriesByType("navigation")[0];
+		const savedEmployees = localStorage.getItem("employees");
+		
 
-		// Agar page reload hua hai
-		if (navigation?.type === "reload") {
-			sessionStorage.removeItem("employeeAttendanceFields");
-
-			setAttendanceFields({
-				presentToday: "",
-				presentRemaining: "",
-				lateEntry: "",
-				onTime: "",
-				onLeave: "",
-				approvedLeaves: "",
-				absent: "",
-				withoutInformation: "",
-			});
-
-			return;
-		}
-
-		const savedData = sessionStorage.getItem("employeeAttendanceFields");
-
-		if (savedData) {
+		if (savedEmployees) {
 			try {
-				setAttendanceFields(JSON.parse(savedData));
+				setEmployees(JSON.parse(savedEmployees));
 			} catch (error) {
-				console.error("Invalid attendance data:", error);
-				sessionStorage.removeItem("employeeAttendanceFields");
+				console.log("Unable to read employees", error);
 			}
 		}
 	}, []);
 
 	const handleChange = (e) => {
-		const { name, value } = e.target;
+		const { name, value, files } = e.target;
 
-		setAttendanceFields((prev) => ({
+		setFormData((prev) => ({
 			...prev,
-			[name]: value,
+			[name]: files ? files[0] : value,
 		}));
 	};
 
-	const handleSave = () => {
-		sessionStorage.setItem(
-			"employeeAttendanceFields",
-			JSON.stringify(attendanceFields),
-		);
+	const handleSubmit = (e) => {
+		e.preventDefault();
 
+		const newEmployee = {
+			...formData,
+			id: Date.now(),
+			status: "Present",
+		};
+
+		const updatedEmployees = [...employees, newEmployee];
+
+		setEmployees(updatedEmployees);
+		localStorage.setItem("employees", JSON.stringify(updatedEmployees));
+
+		setFormData({});
 		setShowForm(false);
 	};
 
-	const getAttendanceTextColor = (presentToday, absentToday) => {
-		const PT = Number(presentToday);
-		const AT = Number(absentToday);
-
-		if (PT > AT) {
-			return "text-red-600";
-		}
-
-		if (PT === AT) {
-			return "text-yellow-600";
-		}
-		
-
-		return "text-green-600";
+	const handleClosePopup = () => {
+		setShowForm(false);
+		setFormData({});
 	};
 
 	return (
-		<div className="space-y-6 p-4">
-			{/* Heading */}
-				<div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-					<div>
-						<p className="text-sm text-slate-400">Monday, 8 September 2026</p>
-
-						<h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-							Good Morning, {data.name || "Akanksha"}!
-						</h1>
-
-						<p className="mt-1 text-sm text-slate-500">
-							Here's what's happening with your Workforce today.
-						</p>
-					</div> 
-				</div>
-
-			{/* Attendance Cards */}
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-				{EmployeeFieldCard?.map((item, index) => {
-					const value =
-						attendanceFields[item.key] !== ""
-							? attendanceFields[item.key]
-							: item.value;
-
-					const remainingValue =
-						attendanceFields[item.remainingKey] !== ""
-							? attendanceFields[item.remainingKey]
-							: item.remainingValue || item.change;
-
-					const textColor = getAttendanceTextColor(
-						attendanceFields.presentToday,
-						attendanceFields.approvedLeaves,
-						attendanceFields.lateEntry,
-						attendanceFields.absent,
-					);
-
-					return (
-						<div
-							key={item?.id || index}
-							className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-						>
-							<div className="flex items-start justify-between">
-								<div>
-									<p className="text-xs font-medium text-slate-500">
-										{item?.title || ""}
-									</p>
-
-									<h3 className="mt-2 text-2xl font-bold text-slate-900">
-										{value}
-									</h3>
-								</div>
-
-								<div
-									className={`flex h-11 w-11 items-center justify-center rounded-xl ${
-										item?.iconBg || "bg-slate-100"
-									} ${item?.iconColor || "text-slate-500"}`}
-								>
-									{item?.icon || null}
-								</div>
-							</div>
-
-							<div className="mt-4 flex items-center gap-2">
-								<span
-									className={`flex items-center gap-1 text-xs font-semibold ${textColor}`}
-								>
-									<FaArrowUp className="text-[9px]" />
-
-									{remainingValue}
-								</span>
-
-								<span className="text-[11px] text-slate-400">
-									{item?.message || ""}
-								</span>
-							</div>
-						</div>
-					);
-				})}
+		<div className="w-full h-full overflow-y-auto p-3 space-y-4">
+			{/* Add Employee */}
+			<div className="flex justify-end">
+				<Button LabelName="Add Employee" onClick={() => setShowForm(true)} />
 			</div>
 
-			{/* Attendance Table */}
+			{/* Employee Table */}
 			<div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-				{/* Search + Filter */}
-				<div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
-					<div className="flex w-full max-w-md items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
-						<svg
-							className="h-4 w-4 text-slate-400"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth="2"
-								d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"
-							/>
-						</svg>
-
-						<InputBox placeholder="Search Anything......" />
-					</div>
-
-					<div className="flex gap-2">
-						<Button LabelName="Filter" />
-
-						<Button LabelName="08, August 2025" variant="Secondary" />
-					</div>
-				</div>
-
-				{/* Filter Tags */}
-				<div className="flex gap-2 border-b border-slate-100 px-4 py-3">
-					{["Leave", "Absent", "Active"].map((filter) => (
-						<button
-							key={filter}
-							className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] text-slate-500"
-						>
-							{filter} ×
-						</button>
-					))}
-				</div>
-
-				{/* Table */}
-				<div className="w-full overflow-x-auto">
-					<table className="w-full min-w-[950px] border-collapse">
+				<div className="overflow-x-auto">
+					<table className="w-full text-left">
 						<thead>
-							<tr className="border-b border-slate-200 bg-slate-50/50">
-								<th className="sticky left-0 z-10 w-[190px] min-w-[190px] bg-slate-50 px-4 py-4 text-left text-[12px] font-semibold text-black">
-									Employee
+							<tr className="border-b border-slate-200 bg-slate-50">
+								<th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+									S. No
 								</th>
 
-								{days.map((day) => (
-									<th
-										key={day}
-										className="min-w-[110px] border-l border-slate-100 px-3 py-4 text-left text-[11px] font-semibold text-slate-800"
-									>
-										{day}
-									</th>
-								))}
+								<th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+									Employee Name
+								</th>
+
+								<th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+									Designation
+								</th>
+
+								<th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+									Department
+								</th>
+
+								<th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+									Action
+								</th>
 							</tr>
 						</thead>
 
-						<tbody>
-							{data?.length > 0 ? (
-								data.map((employee, index) => (
+						<tbody className="divide-y divide-slate-100">
+							{employees.length > 0 ? (
+								employees.map((employee, index) => (
 									<tr
-										key={employee?.id || index}
-										className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50"
+										key={employee.id}
+										className="transition hover:bg-slate-50"
 									>
-										{/* Employee */}
-										<td className="sticky left-0 z-10 bg-blue-100 px-4 py-4">
+										<td className="px-5 py-4 text-sm text-slate-500">
+											{index + 1}
+										</td>
+
+										<td className="px-5 py-4">
 											<div className="flex items-center gap-3">
-												{employee?.avatar ? (
-													<img
-														src={employee.avatar}
-														alt={employee?.employeeName || "Employee"}
-														className="h-9 w-9 rounded-full object-cover"
-													/>
-												) : (
-													<div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">
-														{(employee?.employeeName || "E")
-															.charAt(0)
-															.toUpperCase()}
-													</div>
-												)}
+												<div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-blue-600">
+													{employee.name?.charAt(0)?.toUpperCase() || "E"}
+												</div>
 
 												<div>
-													<p className="whitespace-nowrap text-xs font-semibold text-slate-800">
-														{employee?.employeeName || "Employee"}
+													<p className="text-sm font-semibold text-slate-800">
+														{employee.name || "N/A"}
 													</p>
 
-													<p className="mt-0.5 whitespace-nowrap text-[9px] text-slate-400">
-														{employee?.designation || "N/A"}
-													</p>
+													{/* {employee.employeeId && (
+														<p className="text-xs text-slate-400">
+															{employee.employeeId}
+														</p>
+													)} */}
 												</div>
 											</div>
 										</td>
 
-										{/* Attendance Days */}
-										{days.map((day) => {
-											const attendance = employee?.attendance?.[day] || {};
+										<td className="px-5 py-4 text-sm text-slate-600">
+											{employee.designation || "N/A"}
+										</td>
 
-											const type = attendance?.type || "";
+										<td className="px-5 py-4 text-sm text-slate-600">
+											{employee.department || "N/A"}
+										</td>
 
-											return (
-												<td
-													key={day}
-													className="border-l border-slate-100 px-3 py-3 align-top"
-												>
-													<div className="flex min-h-[55px] flex-col items-start gap-2">
-														{/* Date */}
-														<span className="text-[10px] font-medium text-slate-600">
-															{attendance?.date || "-"}
-														</span>
-
-														{/* Status */}
-														{attendance?.status && (
-															<span
-																className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-[9px] font-medium ${
-																	statusStyles[type] ||
-																	"bg-slate-50 text-slate-500"
-																}`}
-															>
-																{type === "present" || type === "late" ? (
-																	<FaClock className="text-[7px]" />
-																) : (
-																	<span className="h-1.5 w-1.5 rounded-full bg-current" />
-																)}
-
-																{attendance?.status || ""}
-															</span>
-														)}
-													</div>
-												</td>
-											);
-										})}
+										<td className="px-5 py-4">
+											<Button
+												LabelName="View"
+												variant="secondary"
+												className="border-none"
+												onClick={() => onViewEmployeeProfile(employee)}
+											/>
+											{/* <Button
+												LabelName="Delete"
+												className="border-none bg-red-500 "
+												onClick={() => removeEmployees()}
+											/> */}
+										</td>
 									</tr>
 								))
 							) : (
 								<tr>
-									<td
-										colSpan={8}
-										className="py-10 text-center text-sm text-slate-400"
-									>
-										No employee attendance records found.
+									<td colSpan="5" className="px-5 py-12 text-center">
+										<p className="text-sm font-semibold text-slate-600">
+											No employees found
+										</p>
+
+										<p className="mt-1 text-xs text-slate-400">
+											Add employees to see them here.
+										</p>
 									</td>
 								</tr>
 							)}
@@ -336,115 +162,46 @@ const Employee = ({ data = [] }) => {
 				</div>
 			</div>
 
+			{/* Add Employee Popup */}
 			<Popup
 				isOpen={showForm}
-				onClose={() => setShowForm(false)}
-				title="Add Attendance Data"
+				onClose={handleClosePopup}
+				title="Add New Team Member"
+				width="max-w-4xl"
 			>
-				<div className="space-y-4">
-					{/* Present Today */}
-					<h1 className="text-lg font-semibold">Present Today Field</h1>
+				<form onSubmit={handleSubmit} className="space-y-6">
+					<p className="text-sm text-slate-500">
+						Enter the employee details below to create a new team member
+						profile.
+					</p>
 
-					<div>
-						<InputBox
-							labelName="Value"
-							name="presentToday"
-							type="text"
-							placeholder="Enter Value"
-							value={attendanceFields.presentToday}
-							onChange={handleChange}
-						/>
-
-						<InputBox
-							labelName="Remaining Value"
-							name="presentRemaining"
-							type="text"
-							placeholder="Enter remaining value"
-							value={attendanceFields.presentRemaining}
-							onChange={handleChange}
-						/>
+					<div className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
+						{employeeFields.map((field) => (
+							<InputBox
+								key={field.name}
+								labelName={field.labelName}
+								placeholder={field.placeholder}
+								type={field.type}
+								options={field.options}
+								required={field.required}
+								name={field.name}
+								value={formData[field.name] || ""}
+								onChange={handleChange}
+							/>
+						))}
 					</div>
 
-					{/* Late Entry */}
-					<h1 className="text-lg font-semibold">Late Entry Field</h1>
+					<div className="flex justify-center gap-4 border-t border-slate-100 pt-5">
+						<Button LabelName="Submit" type="submit" />
 
-					<div>
-						<InputBox
-							labelName="Late Entry"
-							name="lateEntry"
-							type="text"
-							placeholder="Enter late entry value"
-							value={attendanceFields.lateEntry}
-							onChange={handleChange}
-						/>
-
-						<InputBox
-							labelName="On Time"
-							name="onTime"
-							type="text"
-							placeholder="Enter on time Value"
-							value={attendanceFields.onTime}
-							onChange={handleChange}
-						/>
-					</div>
-
-					{/* On Leave */}
-					<h1 className="text-lg font-semibold">On Leave Field</h1>
-
-					<div>
-						<InputBox
-							labelName="On leave"
-							name="onLeave"
-							type="text"
-							placeholder="Enter late on leave value"
-							value={attendanceFields.onLeave}
-							onChange={handleChange}
-						/>
-
-						<InputBox
-							labelName="Approved Leaves"
-							name="approvedLeaves"
-							type="text"
-							placeholder="Enter approved leaves Value"
-							value={attendanceFields.approvedLeaves}
-							onChange={handleChange}
-						/>
-					</div>
-
-					{/* Absent */}
-					<h1 className="text-lg font-semibold">Absent Field</h1>
-
-					<div>
-						<InputBox
-							labelName="Absent"
-							name="absent"
-							type="text"
-							placeholder="Enter late absent value"
-							value={attendanceFields.absent}
-							onChange={handleChange}
-						/>
-
-						<InputBox
-							labelName="Without Information"
-							name="withoutInformation"
-							type="text"
-							placeholder="Enter without information Value"
-							value={attendanceFields.withoutInformation}
-							onChange={handleChange}
-						/>
-					</div>
-
-					{/* Buttons */}
-					<div className="flex justify-end gap-3">
 						<Button
 							LabelName="Cancel"
 							variant="secondary"
-							onClick={() => setShowForm(false)}
+							type="button"
+							onClick={handleClosePopup}
 						/>
-
-						<Button LabelName="Save" onClick={handleSave} />
 					</div>
-				</div>
+				</form>
 			</Popup>
 		</div>
 	);

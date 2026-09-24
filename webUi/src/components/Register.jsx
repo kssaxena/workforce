@@ -9,25 +9,26 @@ const Register = () => {
 	const handleSubmit = (e) => {
 		e.preventDefault();
 
-		// Login API yahan call kar sakte ho
+		// Register API yahan call kar sakte ho
 
 		// Example:
 		// navigate("/dashboard");
 	};
+
 	return (
 		<div className="min-h-screen bg-white text-slate-900">
-			<div className="flex min-h-screen">
+			<div className="flex min-h-screen flex-col lg:flex-row">
 				{/* ================= LEFT PANEL ================= */}
-				<section className="relative hidden min-h-screen overflow-hidden bg-blue-600 lg:flex lg:w-2/5">
-					{/* Background shapes */}
+				<section className="relative hidden min-h-screen overflow-hidden bg-blue-600 lg:flex lg:w-[40%] xl:w-[42%]">
+					{/* Background Shapes */}
 					<div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-blue-500 opacity-40" />
 
 					<div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-blue-700 opacity-40" />
 
 					{/* Content */}
-					<div className="relative z-10 flex w-full flex-col items-center justify-center px-10 text-center">
-						<div className="max-w-xl">
-							{/* Small Badge */}
+					<div className="relative z-10 flex w-full items-center justify-center px-8 py-12 xl:px-12">
+						<div className="w-full max-w-xl text-center">
+							{/* Badge */}
 							<div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm">
 								<span className="h-2 w-2 rounded-full bg-white" />
 
@@ -36,7 +37,8 @@ const Register = () => {
 								</span>
 							</div>
 
-							<h2 className="text-4xl font-semibold leading-tight text-white xl:text-5xl">
+							{/* Heading */}
+							<h2 className="text-3xl font-semibold leading-tight text-white xl:text-5xl">
 								Manage your workforce.
 								<br />
 								<span className="text-blue-100">Build better teams.</span>
@@ -48,9 +50,9 @@ const Register = () => {
 							</p>
 
 							{/* Dashboard Preview */}
-							<div className="mx-auto mt-12 w-full max-w-lg rounded-2xl border border-white/20 bg-white/10 p-3 shadow-2xl backdrop-blur-md">
-								<div className="rounded-xl bg-white p-5 text-left">
-									<div className="flex items-center justify-between">
+							<div className="mx-auto mt-10 w-full max-w-lg rounded-2xl border border-white/20 bg-white/10 p-3 shadow-2xl backdrop-blur-md">
+								<div className="rounded-xl bg-white p-4 text-left sm:p-5">
+									<div className="flex items-center justify-between gap-4">
 										<div>
 											<p className="text-[10px] text-slate-400">
 												Total Employees
@@ -66,8 +68,8 @@ const Register = () => {
 										</div>
 									</div>
 
-									<div className="mt-6 grid grid-cols-3 gap-3">
-										<div className="rounded-lg bg-slate-50 p-3">
+									<div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
+										<div className="rounded-lg bg-slate-50 p-2 sm:p-3">
 											<p className="text-[9px] text-slate-400">Present</p>
 
 											<p className="mt-1 text-sm font-bold text-slate-800">
@@ -75,7 +77,7 @@ const Register = () => {
 											</p>
 										</div>
 
-										<div className="rounded-lg bg-slate-50 p-3">
+										<div className="rounded-lg bg-slate-50 p-2 sm:p-3">
 											<p className="text-[9px] text-slate-400">On Leave</p>
 
 											<p className="mt-1 text-sm font-bold text-slate-800">
@@ -83,7 +85,7 @@ const Register = () => {
 											</p>
 										</div>
 
-										<div className="rounded-lg bg-slate-50 p-3">
+										<div className="rounded-lg bg-slate-50 p-2 sm:p-3">
 											<p className="text-[9px] text-slate-400">Absent</p>
 
 											<p className="mt-1 text-sm font-bold text-slate-800">
@@ -98,12 +100,12 @@ const Register = () => {
 				</section>
 
 				{/* ================= RIGHT PANEL ================= */}
-				<section className="flex w-full items-center justify-center px-6 py-8 sm:px-10 lg:w-3/5  xl:px-4 ">
-					<div className="w-full  px-10">
-						{/* Logo */}
-						<div className="flex justify-between items-center ">
+				<section className="flex min-h-screen w-full items-center justify-center px-4 py-6 sm:px-6 sm:py-10 md:px-10 lg:w-[60%] lg:px-10 xl:w-[58%] xl:px-14">
+					<div className="w-full max-w-3xl">
+						{/* Logo + Sign In */}
+						<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 							<div>
-								<a href="/" className="inline-flex items-center gap-2">
+								<Link to="/" className="inline-flex items-center gap-2">
 									<span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-black text-white shadow-sm">
 										W
 									</span>
@@ -112,46 +114,48 @@ const Register = () => {
 										Workforce
 										<span className="text-blue-600">OS</span>
 									</span>
-								</a>
+								</Link>
 							</div>
-							<div className="flex items-center justify-center gap-2">
-								<p className="text-sm text-blue-500">
+
+							<div className="flex items-center gap-2">
+								<p className="text-xs text-slate-500 sm:text-sm">
 									Already have an account?
 								</p>
-								<a href="/login" className="text-sm hover:text-blue-700">
+
+								<a href="/" className="text-sm hover:text-blue-700">
 									{" "}
-									Sign In
+									Sign In{" "}
 								</a>
 							</div>
 						</div>
 
 						{/* Heading */}
-						<div className="">
-							<h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+						<div className="mt-10 sm:mt-12">
+							<h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
 								Create Your Organization
 							</h1>
 
-							<p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
+							<p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">
 								Get started with your free account and build a smarter workforce
 								management system for your business.
 							</p>
 						</div>
 
-						{/* Login Form */}
+						{/* ================= FORM ================= */}
 						<form
 							onSubmit={handleSubmit}
-							className="space-y-1 grid grid-cols-2 gap-6"
+							className="mt-8 grid grid-cols-1 gap-x-5 gap-y-1 sm:mt-10 md:grid-cols-2"
 						>
-							{/* Email */}
+							{/* Company Name */}
 							<InputBox
-								labelName="Company name"
+								labelName="Company Name"
 								name="companyName"
 								type="text"
 								placeholder="Enter your company name"
 								required
 							/>
 
-							{/* Password */}
+							{/* Industry */}
 							<InputBox
 								labelName="Industry"
 								name="industry"
@@ -159,23 +163,58 @@ const Register = () => {
 								placeholder="Select industry"
 								required
 								options={[
-									{ label: "Technology", value: "technology" },
-									{ label: "Healthcare", value: "healthcare" },
-									{ label: "Finance & Banking", value: "finance_banking" },
-									{ label: "Education", value: "education" },
-									{ label: "Retail", value: "retail" },
-									{ label: "Manufacturing", value: "manufacturing" },
-									{ label: "Real Estate", value: "real_estate" },
-									{ label: "Travel & Tourism", value: "travel_tourism" },
-									{ label: "Beauty & Wellness", value: "beauty_wellness" },
+									{
+										label: "Technology",
+										value: "technology",
+									},
+									{
+										label: "Healthcare",
+										value: "healthcare",
+									},
+									{
+										label: "Finance & Banking",
+										value: "finance_banking",
+									},
+									{
+										label: "Education",
+										value: "education",
+									},
+									{
+										label: "Retail",
+										value: "retail",
+									},
+									{
+										label: "Manufacturing",
+										value: "manufacturing",
+									},
+									{
+										label: "Real Estate",
+										value: "real_estate",
+									},
+									{
+										label: "Travel & Tourism",
+										value: "travel_tourism",
+									},
+									{
+										label: "Beauty & Wellness",
+										value: "beauty_wellness",
+									},
 									{
 										label: "Marketing & Advertising",
 										value: "marketing_advertising",
 									},
-									{ label: "IT & Software", value: "it_software" },
-									{ label: "Other", value: "other" },
+									{
+										label: "IT & Software",
+										value: "it_software",
+									},
+									{
+										label: "Other",
+										value: "other",
+									},
 								]}
 							/>
+
+							{/* Company Size */}
 							<InputBox
 								labelName="Company Size"
 								name="companySize"
@@ -183,23 +222,51 @@ const Register = () => {
 								placeholder="Select company size"
 								required
 								options={[
-									{ label: "1–10 Employees", value: "1-10" },
-									{ label: "11–50 Employees", value: "11-50" },
-									{ label: "51–200 Employees", value: "51-200" },
-									{ label: "201–500 Employees", value: "201-500" },
-									{ label: "501–1,000 Employees", value: "501-1000" },
-									{ label: "1,001–5,000 Employees", value: "1001-5000" },
-									{ label: "5,001–10,000 Employees", value: "5001-10000" },
-									{ label: "10,000+ Employees", value: "10000+" },
+									{
+										label: "1–10 Employees",
+										value: "1-10",
+									},
+									{
+										label: "11–50 Employees",
+										value: "11-50",
+									},
+									{
+										label: "51–200 Employees",
+										value: "51-200",
+									},
+									{
+										label: "201–500 Employees",
+										value: "201-500",
+									},
+									{
+										label: "501–1,000 Employees",
+										value: "501-1000",
+									},
+									{
+										label: "1,001–5,000 Employees",
+										value: "1001-5000",
+									},
+									{
+										label: "5,001–10,000 Employees",
+										value: "5001-10000",
+									},
+									{
+										label: "10,000+ Employees",
+										value: "10000+",
+									},
 								]}
 							/>
+
+							{/* Executive Name */}
 							<InputBox
-								labelName="Executive name"
+								labelName="Executive Name"
 								name="executiveName"
 								type="text"
 								placeholder="Enter your name"
 								required
 							/>
+
+							{/* Email */}
 							<InputBox
 								labelName="Email"
 								name="email"
@@ -207,6 +274,8 @@ const Register = () => {
 								placeholder="Enter your email"
 								required
 							/>
+
+							{/* Contact Number */}
 							<InputBox
 								labelName="Contact Number"
 								name="number"
@@ -214,28 +283,39 @@ const Register = () => {
 								placeholder="Enter your contact number"
 								required
 							/>
-						</form>
-						<div className="flex items-center justify-between">
-							<div className="flex justify-center items-center gap-1">
+
+							{/* Terms */}
+							<div className=" flex items-center justify-start gap-2 md:col-span-2">
 								<div>
-									<InputBox type="checkbox" className="" />
+									<InputBox
+										type="checkbox"
+										name="terms"
+										required
+										className="mt-1 "
+									/>
 								</div>
 
-								<span className="text-xs text-slate-500">
+								<span className="text-xs text-slate-500 ">
 									I agree to the{" "}
-									<span className="text-blue-500">Terms & Condition</span> and{" "}
-									<span className="text-blue-500">Privacy Policy</span>{" "}
+									<span className="cursor-pointer text-blue-500 hover:text-blue-600">
+										Terms & Condition
+									</span>{" "}
+									and{" "}
+									<span className="cursor-pointer text-blue-500 hover:text-blue-600">
+										Privacy Policy
+									</span>
 								</span>
 							</div>
-						</div>
 
-						<div className="pt-3">
-							<Button
-								LabelName="Sign In"
-								type="submit"
-								className="w-full justify-center py-3"
-							/>
-						</div>
+							{/* Submit */}
+							<div className="pt-3 md:col-span-2">
+								<Button
+									LabelName="Create Organization"
+									type="submit"
+									className="w-full justify-center py-3"
+								/>
+							</div>
+						</form>
 					</div>
 				</section>
 			</div>

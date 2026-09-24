@@ -4,11 +4,14 @@ import { FaBars, FaHome, FaSignOutAlt, FaTimes } from "react-icons/fa";
 import { dashboardSectionList } from "../../constant/constant";
 
 import Overview from "./DashboardComponent/Overview";
-import Designation from "./DashboardComponent/Designation";
+import Designation from "./DashboardComponent/Employee";
 import EmployeeProfile from "./DashboardComponent/EmployeeProfile";
-import Employee from "../Dashboard/DashboardComponent/Employee"
+import Employee from "./DashboardComponent/Employee";
+import Payroll from "./DashboardComponent/Payroll";
+import Access from "./DashboardComponent/Access";
+import Attendance from "./DashboardComponent/Attendance";
 
-const Dashboard = () => {
+const Dashboard = (data) => {
 	const role = localStorage.getItem("role") || "company";
 
 	const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -16,6 +19,7 @@ const Dashboard = () => {
 	const [activeSection, setActiveSection] = useState(
 		() => localStorage.getItem("activeSection") || "overview",
 	);
+	const [selectedEmployee, setSelectedEmployee] = useState(null);
 
 	const handleSectionClick = (query) => {
 		localStorage.setItem("activeSection", query);
@@ -30,16 +34,12 @@ const Dashboard = () => {
 
 	return (
 		<div className="flex min-h-screen w-full overflow-y-auto bg-slate-50">
-			{/* =====================================================
-				SIDEBAR
-			===================================================== */}
+			{/* sidebar */}
 
 			<aside
 				className={`fixed left-0 top-0 z-50	flex h-screen w-[280px] flex-col  border-slate-200m bg-white transition-transform duration-300 md:sticky md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
 			>
-				{/* =================================================
-					SIDEBAR HEADER
-				================================================= */}
+				{/* sidebar header */}
 
 				<div className="flex items-center justify-between border-b border-slate-200 bg-white p-4">
 					{/* Logo */}
@@ -66,18 +66,14 @@ const Dashboard = () => {
 					</button>
 				</div>
 
-				{/* =================================================
-					SIDEBAR CONTENT
-				================================================= */}
+				{/* sidebar content */}
 
 				<div className="flex-1 overflow-y-auto px-4 py-6">
 					<p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
 						Main Menu
 					</p>
 
-					{/* =================================================
-						NAVIGATION
-					================================================= */}
+					{/* Navigation */}
 
 					<nav className="space-y-1">
 						<ul className="flex flex-col gap-2">
@@ -126,9 +122,7 @@ const Dashboard = () => {
 						</ul>
 					</nav>
 
-					{/* =================================================
-						QUICK LINKS
-					================================================= */}
+					{/* quick links */}
 
 					<p className="mb-3 mt-8 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
 						Quick Links
@@ -186,10 +180,7 @@ const Dashboard = () => {
 					</div>
 				</div>
 			</aside>
-
-			{/* =====================================================
-				MOBILE OVERLAY
-			===================================================== */}
+			{/* mobile Overlay */}
 
 			{sidebarOpen && (
 				<div
@@ -198,14 +189,10 @@ const Dashboard = () => {
 				/>
 			)}
 
-			{/* =====================================================
-				MAIN CONTENT
-			===================================================== */}
+			{/* Main content */}
 
 			<main className="flex min-w-0 flex-1 flex-col">
-				{/* =================================================
-					HEADER
-				================================================= */}
+				{/* Main header */}
 
 				<header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-white px-4 shadow-sm">
 					{/* Mobile Menu */}
@@ -220,19 +207,25 @@ const Dashboard = () => {
 
 					{/* Desktop Title */}
 
-					<h2 className="hidden text-lg font-semibold capitalize text-slate-800 md:block">
+					{/* <h2 className="hidden text-lg font-semibold capitalize text-slate-800 md:block">
 						{activeSection}
-					</h2>
+					</h2> */}
 
 					{/* User */}
 
 					<div className="ml-auto flex items-center gap-3">
-						<span className="hidden text-sm text-slate-600 sm:block">
-							Welcome, Akanksha
-						</span>
-
-						<div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
-							A
+						<div className="h-9 w-9 overflow-hidden rounded-full bg-blue-600 ring-4 ring-blue-50">
+							{data.profileImage ? (
+								<img
+									src={profileImage}
+									alt={`${name} profile`}
+									className="h-full w-full object-cover"
+								/>
+							) : (
+								<div className="flex h-full w-full items-center justify-center text-3xl font-bold text-white">
+									{data.name?.charAt(0)?.toUpperCase()}
+								</div>
+							)}
 						</div>
 					</div>
 				</header>
@@ -242,11 +235,29 @@ const Dashboard = () => {
 				================================================= */}
 
 				<div className="min-w-0 flex-1">
-					{activeSection === "overview" && <Overview />}
+					{activeSection === "access" && <Access />}
+					{activeSection === "attendance" && <Attendance />}
+					{activeSection === "analytics" && (
+						<Overview
+							onViewEmployee={() => {
+								setActiveSection("employee");
+							}}
+						/>
+					)}
+					{activeSection === "employee" && (
+						<Employee
+							onViewEmployeeProfile={(employee) => {
+								setSelectedEmployee(employee);
+								setActiveSection("employeeProfile");
+							}}
+						/>
+					)}
 
-					{activeSection === "designation" && <Designation />}
+					{activeSection === "employeeProfile" && selectedEmployee && (
+						<EmployeeProfile data={selectedEmployee} />
+					)}
 
-					{activeSection === "employee" && <EmployeeProfile />}
+					{activeSection === "payroll" && <Payroll />}
 				</div>
 			</main>
 		</div>

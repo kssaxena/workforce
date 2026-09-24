@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import Button from "../../../components/Button";
+import React, { useEffect, useState } from "react";
 import {
 	FaCalendarAlt,
 	FaUsers,
@@ -9,7 +8,7 @@ import {
 	FaChevronRight,
 } from "react-icons/fa";
 
-import { stats, meetings, recentActivity } from "../../../constant/constant";
+import { stats, meetings } from "../../../constant/constant";
 import {
 	Chart as ChartJS,
 	CategoryScale,
@@ -20,18 +19,25 @@ import {
 } from "chart.js";
 
 import { Bar } from "react-chartjs-2";
-import InputBox from "../../../components/Input";
-import EmployeeProfile from "./EmployeeProfile";
+import Button from "../../../components/Button";
 
-const Overview = (data) => {
+const Overview = ({ data= [], onViewEmployee }) => {
+	const [employees, setEmployees] = useState([]);
+
 	const [totalEmployee, setTotalEmployee] = useState(null);
 	const [presentToday, setPresentToday] = useState(null);
 	const [onLeave, setOnLeave] = useState(null);
-	const absent = totalEmployee-presentToday;
-	const lateEntryEmployee = absent - onLeave;
-	const [viewEmployeeProfile, setViewEmployeeProfile] = useState(false);
-	const [activeSection, setActiveSection] =  useState(false);
 
+	const absent = totalEmployee - presentToday;
+	const lateEntryEmployee = absent - onLeave;
+
+	const [viewEmployeeProfile, setViewEmployeeProfile] = useState(false);
+
+	useEffect(() => {
+		const savedEmployees = JSON.parse(localStorage.getItem("employees")) || [];
+
+		setEmployees(savedEmployees);
+	}, []);
 	ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 	return (
@@ -43,7 +49,7 @@ const Overview = (data) => {
 						<p className="text-sm text-slate-400">Monday, 8 September 2026</p>
 
 						<h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-							Good Morning, {data.name || "Akanksha"}!
+							Welcome {data.name || "loream"}!
 						</h1>
 
 						<p className="mt-1 text-sm text-slate-500">
@@ -51,26 +57,26 @@ const Overview = (data) => {
 						</p>
 					</div>
 				</div>
+				{/* Dummy Div */}
 				<div className="flex justify-start items-center mb-4 gap-4">
 					<input
 						onChange={(e) => setTotalEmployee(e.target.value)}
 						type="text"
 						placeholder="Enter total employee value"
-						className="text-[10px] placeholder:text-black p-4 w-56 h-6 bg-blue-100 rounded-lg border-slate-100  "
+						className="text-[10px] placeholder:text-black p-4 w-28 h-6 bg-blue-100 rounded-lg border-slate-100  "
 					/>
 					<input
 						onChange={(e) => setPresentToday(e.target.value)}
 						type="text"
 						placeholder="Enter present employee value"
-						className="text-[10px] placeholder:text-black p-4  w-56 h-6 bg-blue-100 rounded-lg border-slate-100  "
+						className="text-[10px] placeholder:text-black p-4  w-28 h-6 bg-blue-100 rounded-lg border-slate-100  "
 					/>
 					<input
 						onChange={(e) => setOnLeave(e.target.value)}
 						type="text"
-						placeholder="Enter present employee value"
-						className="text-[10px] placeholder:text-black p-4  w-56 h-6 bg-blue-100 rounded-lg border-slate-100  "
+						placeholder="Enter on leave value"
+						className="text-[10px] placeholder:text-black p-4  w-28 h-6 bg-blue-100 rounded-lg border-slate-100  "
 					/>
-					
 				</div>
 
 				{/* ================= STATS ================= */}
@@ -142,16 +148,21 @@ const Overview = (data) => {
 				<div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 					<div className="flex items-center justify-between">
 						<div>
-							<h2 className="font-bold text-slate-900">Total Employees</h2>
+							<h2 className="font-bold text-slate-900">Recent Employees</h2>
 
 							<p className="mt-1 text-xs text-slate-400">
 								Manage your employees
 							</p>
 						</div>
 
-						<button className="text-xs font-semibold text-blue-600">
-							View All →
-						</button>
+						<div>
+							<Button
+								onClick={onViewEmployee}
+								LabelName="View All →"
+								variant="secondary"
+								className="border-none"
+							/>
+						</div>
 					</div>
 
 					<div className="mt-5 overflow-x-auto">
@@ -162,18 +173,18 @@ const Overview = (data) => {
 									<th className="px-4 py-3">Name</th>
 									<th className="px-4 py-3">Designation</th>
 									<th className="px-4 py-3">present/Absent</th>
-									<th className="px-4 py-3">Action</th>
+									
 								</tr>
 							</thead>
 
 							<tbody>
-								{recentActivity.map((item) => (
+								{employees.map((item, index) => (
 									<tr
-										key={`${item.serialNumber}-${item.name}`}
+										key={`${index + 1}-${item.name}`}
 										className="border-b border-slate-100 last:border-0"
 									>
 										<td className="px-4 py-4 text-xs text-slate-500">
-											{item.serialNumber}
+											{index + 1}
 										</td>
 
 										<td className="px-4 py-4">
@@ -207,18 +218,18 @@ const Overview = (data) => {
 											</span>
 										</td>
 
-										<td className="px-4 py-4">
-											<button onClick={() => setViewEmployeeProfile(true)}
-											 className="flex gap-1 text-sm justify-center items-center text-slate-400 hover:text-blue-600">
-												View
-												<FaChevronRight />
-											</button>
-										</td>
+										{/* <td className="px-4 py-4">
+											<Button
+												LabelName="View"
+												variant="secondary"
+												className="border-none"
+												onClick={() => onViewEmployee(employee)}
+											/>
+										</td> */}
 									</tr>
 								))}
 							</tbody>
 						</table>
-						
 					</div>
 				</div>
 
@@ -380,58 +391,7 @@ const Overview = (data) => {
 					</div>
 				</div>
 
-				{/* ================= QUICK ACTIONS ================= */}
-				<div className="mt-6">
-					<h2 className="mb-4 text-lg font-bold text-slate-900">
-						Quick Actions
-					</h2>
-
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-						{[
-							{
-								title: "Book a Meeting",
-								description: "Schedule a new meeting",
-								icon: <FaCalendarAlt />,
-							},
-							{
-								title: "View Calendar",
-								description: "Check your schedule",
-								icon: <FaCalendarAlt />,
-							},
-							{
-								title: "View Reports",
-								description: "See your performance",
-								icon: <FaChartLine />,
-							},
-							{
-								title: "Update Profile",
-								description: "Manage your information",
-								icon: <FaUser />,
-							},
-						].map((item) => (
-							<button
-								key={item.title}
-								className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
-							>
-								<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
-									{item.icon}
-								</div>
-
-								<div className="min-w-0 flex-1">
-									<p className="text-xs font-bold text-slate-800">
-										{item.title}
-									</p>
-
-									<p className="mt-1 text-[10px] text-slate-400">
-										{item.description}
-									</p>
-								</div>
-
-								<FaChevronRight className="text-xs text-slate-300 group-hover:text-blue-600" />
-							</button>
-						))}
-					</div>
-				</div>
+			
 			</section>
 		</div>
 	);

@@ -1,64 +1,79 @@
 import {
+	FaChartPie,
+	FaUserTie,
+	FaBuilding,
+	FaUsers,
+	FaCreditCard,
+	FaPlusCircle,
+	FaUserShield,
+	FaKey,
+	FaMoneyCheckAlt,
 	FaCalendarAlt,
 	FaCheckCircle,
 	FaHourglassStart,
-	FaLastfmSquare,
-	FaRProject,
 	FaRupeeSign,
-	FaUsers,
+
 } from "react-icons/fa";
 import { GoVerified } from "react-icons/go";
 
 export const dashboardSectionList = [
 	{
-		name: "Overview",
-		icon: <GoVerified />,
-		query: "overview",
-		roles: ["company", "company team", "manager", "employee"],
-	},
-	{
-		name: "Designation",
-		icon: <GoVerified />,
-		query: "designation",
-		subCategory: ["HR", "Manager", "Team Leader", "Executive"],
-		roles: ["company", "company team", "manager"],
-	},
-	{
-		name: "Company",
-		icon: <GoVerified />,
-		query: "companyLevel",
-		roles: ["company", "company team", "manager"],
-	},
-	{
-		name: "Employee",
-		icon: <GoVerified />,
-		query: "employee",
-		roles: ["company", "company team", "manager"],
-	},
-	{
-		name: "Subscription",
-		icon: <GoVerified />,
-		query: "subscription",
-		roles: ["company", "company team", "manager"],
-	},
-	{
-		name: "Addition",
-		icon: <GoVerified />,
-		query: "addition",
-		roles: ["company"],
-	},
-	{
 		name: "Access",
-		icon: <GoVerified />,
+		icon: <FaUserShield />,
 		query: "access",
 		roles: ["company", "company team", "manager"],
 	},
 	{
-		name: "Grant",
-		icon: <GoVerified />,
-		query: "grant",
+		name: "Analytics",
+		icon: <FaChartPie />,
+		query: "analytics",
+		roles: ["company", "company team", "manager", "employee"],
+	},
+	{
+		name: "Attendance",
+		icon: <FaPlusCircle />,
+		query: "attendance",
+		roles: ["company"],
+	},
+	// {
+	// 	name: "Company",
+	// 	icon: <FaBuilding />,
+	// 	query: "companyLevel",
+	// 	roles: ["company", "company team", "manager"],
+	// },
+	{
+		name: "Employee",
+		icon: <FaUserTie />,
+		query: "employee",
+		subCategory: ["HR", "Manager", "Team Leader", "Executive"],
 		roles: ["company", "company team", "manager"],
 	},
+
+	{
+		name: "Employee Profile",
+		icon: <FaUsers />,
+		query: "employeeProfile",
+		roles: ["company", "company team", "manager"],
+	},
+	// {
+	// 	name: "Grant",
+	// 	icon: <FaKey />,
+	// 	query: "grant",
+	// 	roles: ["company", "company team", "manager"],
+	// },
+
+	{
+		name: "Payroll",
+		icon: <FaMoneyCheckAlt />,
+		query: "payroll",
+		roles: ["company", "company team", "manager"],
+	},
+	// {
+	// 	name: "Subscription",
+	// 	icon: <FaCreditCard />,
+	// 	query: "subscription",
+	// 	roles: ["company", "company team", "manager"],
+	// },
 ];
 
 export const employeeFields = [
@@ -67,25 +82,25 @@ export const employeeFields = [
 		name: "name",
 		type: "text",
 		placeholder: "Enter employee name",
-		required: true,
+		
 	},
 	{
 		labelName: "Contact Number",
 		name: "contactNumber",
 		type: "tel",
 		placeholder: "Enter contact number",
-		required: true,
+		
 	},
 	{
 		labelName: "Email",
 		name: "email",
 		type: "email",
 		placeholder: "Enter email address",
-		required: true,
+		
 	},
 	{
-		labelName: "Post",
-		name: "post",
+		labelName: "Department",
+		name: "department",
 		type: "select",
 		placeholder: "Select post",
 		options: [
@@ -94,7 +109,14 @@ export const employeeFields = [
 			{ label: "Team Leader", value: "Team Leader" },
 			{ label: "Executive", value: "Executive" },
 		],
-		required: true,
+		
+	},
+	{
+		labelName: "Designation",
+		name: "designation",
+		type: "text",
+		placeholder: "Enter your designation",
+		
 	},
 	{
 		labelName: "Address",
@@ -125,7 +147,7 @@ export const employeeFields = [
 		labelName: "Joining Date",
 		name: "joiningDate",
 		type: "date",
-		required: true,
+		
 	},
 	{
 		labelName: "CTC",
@@ -150,7 +172,7 @@ export const employeeFields = [
 		name: "employeeId",
 		type: "text",
 		placeholder: "Enter employee ID",
-		required: true,
+		
 	},
 	{
 		labelName: "Device Provided by Company",
@@ -228,70 +250,6 @@ export const meetings = [
 		person: "Neha Kapoor",
 		type: "Zoom Meeting",
 		color: "bg-orange-500",
-	},
-];
-export const recentActivity = [
-	{
-		serialNumber: "1",
-		name: "Rohan Mehta",
-		designation: "Team Leader",
-		status: "Present",
-	},
-	{
-		serialNumber: "2",
-		name: "Akanksha Kumari",
-		designation: "UI/UX Developer",
-		status: "Absent",
-	},
-	{
-		serialNumber: "3",
-		name: "Mouli Das",
-		designation: "Salseforce Developer",
-		status: "Present",
-	},
-	{
-		serialNumber: "4",
-		name: "Neha Kapoor",
-		designation: "HR",
-		status: "Present",
-	},
-];
-export const EmployeeFieldCard = [
-	{
-		key: "presentToday",
-		remainingKey: "presentRemaining",
-		title: "Present Today",
-		message: "People Remaining",
-		icon: <FaUsers />,
-		iconBg: "bg-blue-50",
-		iconColor: "text-blue-600",
-	},
-	{
-		key: "lateEntry",
-		remainingKey: "onTime",
-		title: "Late Entry",
-		message: "People are on time",
-		icon: <FaCalendarAlt />,
-		iconBg: "bg-purple-50",
-		iconColor: "text-purple-600",
-	},
-	{
-		key: "onLeave",
-		remainingKey: "approvedLeaves",
-		title: "On Leave",
-		message: "Approved Leaves",
-		icon: <FaCheckCircle />,
-		iconBg: "bg-green-50",
-		iconColor: "text-green-600",
-	},
-	{
-		key: "absent",
-		remainingKey: "withoutInformation",
-		title: "Absent",
-		message: "Without Information",
-		icon: <FaRupeeSign />,
-		iconBg: "bg-orange-50",
-		iconColor: "text-orange-500",
 	},
 ];
 

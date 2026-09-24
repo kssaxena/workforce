@@ -6,7 +6,6 @@ import Login from "../components/Login";
 import Register from "../components/Register";
 
 const AppRoutes = () => {
-
 	return (
 		<Routes>
 			<Route path="/" element={<WorkforceOS />} />

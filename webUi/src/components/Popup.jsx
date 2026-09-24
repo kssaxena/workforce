@@ -37,7 +37,7 @@ const Popup = ({
 					<h2 className="text-lg font-semibold text-slate-900">{title}</h2>
 
 					<button
-						type="button"
+						
 						onClick={onClose}
 						className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
 					>
