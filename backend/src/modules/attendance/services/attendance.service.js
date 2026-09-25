@@ -1,15 +1,21 @@
-import mongoose from "mongoose";
-
 import Company from "../../company/models/company.model.js";
 import Employee from "../../employee/models/employee.model.js";
 import Attendance from "../models/attendance.model.js";
 
+import { ApiError } from "../../../core/errors/ApiError.js";
+
+import { getStartOfBusinessDay } from "../../../core/utils/dateTime.js";
+
 import {
-  getStartOfBusinessDay,
-  calculateWorkedMinutes,
-} from "../../../core/utils/dateTime.js";
+  calculateCheckInMetrics,
+  calculateCheckOutMetrics,
+} from "./attendanceCalculation.service.js";
 
 import { isWithinRadius } from "./geo.service.js";
+
+/* =========================================================
+   CHECK IN
+========================================================= */
 
 export const checkIn = async ({
   userId,
@@ -33,7 +39,7 @@ export const checkIn = async ({
   });
 
   if (!employee) {
-    throw new Error("Active employee profile not found");
+    throw new ApiError(404, "Active employee profile not found");
   }
 
   /*
@@ -45,29 +51,57 @@ export const checkIn = async ({
   const company = await Company.findById(companyId).select("settings");
 
   if (!company) {
-    throw new Error("Company not found");
+    throw new ApiError(404, "Company not found");
   }
 
   if (!company.settings?.attendanceEnabled) {
-    throw new Error("Attendance is disabled for this company");
+    throw new ApiError(400, "Attendance is disabled for this company");
   }
 
   /*
    * -----------------------------------------
-   * 3. Determine today's date
-   *
-   * We will improve timezone handling
-   * shortly using the company's timezone.
+   * 3. Determine timezone
    * -----------------------------------------
    */
 
   const timezone = company.settings?.timezone || "Asia/Kolkata";
 
+  const checkInTimestamp = new Date();
+
+  /*
+   * -----------------------------------------
+   * 4. Determine attendance metrics
+   * -----------------------------------------
+   */
+
+  const metrics = await calculateCheckInMetrics({
+    companyId,
+    employee,
+    checkInTimestamp,
+    timezone,
+  });
+
+  /*
+   * -----------------------------------------
+   * 5. Prevent check-in on non-working day
+   * -----------------------------------------
+   */
+
+  if (!metrics.isWorkingDay) {
+    throw new ApiError(400, "Today is a scheduled non-working day");
+  }
+
+  /*
+   * -----------------------------------------
+   * 6. Determine business date
+   * -----------------------------------------
+   */
+
   const today = getStartOfBusinessDay(timezone);
 
   /*
    * -----------------------------------------
-   * 4. Prevent duplicate check-in
+   * 7. Prevent duplicate check-in
    * -----------------------------------------
    */
 
@@ -78,23 +112,52 @@ export const checkIn = async ({
   });
 
   if (existingAttendance?.checkIn?.timestamp) {
-    throw new Error("Employee has already checked in today");
+    throw new ApiError(400, "Employee has already checked in today");
   }
 
   /*
    * -----------------------------------------
-   * 5. GPS verification
+   * 8. GPS verification
    * -----------------------------------------
    */
 
   let verification = "MANUAL";
   let distanceFromOffice = null;
 
-  if (company.settings.gpsAttendanceEnabled) {
-    const attendanceLocation = company.settings.attendanceLocation;
+  const gpsEnabled = company.settings?.gpsAttendanceEnabled === true;
 
-    if (!attendanceLocation?.latitude || !attendanceLocation?.longitude) {
-      throw new Error("Company attendance location is not configured");
+  if (gpsEnabled) {
+    const attendanceLocation = company.settings?.attendanceLocation;
+
+    /*
+     * IMPORTANT:
+     * Don't use !latitude / !longitude here.
+     * 0 is a valid coordinate.
+     */
+
+    if (
+      attendanceLocation?.latitude === undefined ||
+      attendanceLocation?.latitude === null ||
+      attendanceLocation?.longitude === undefined ||
+      attendanceLocation?.longitude === null
+    ) {
+      throw new ApiError(400, "Company attendance location is not configured");
+    }
+
+    /*
+     * Employee location must also exist
+     */
+
+    if (
+      latitude === undefined ||
+      latitude === null ||
+      longitude === undefined ||
+      longitude === null
+    ) {
+      throw new ApiError(
+        400,
+        "Location coordinates are required for GPS attendance",
+      );
     }
 
     const result = isWithinRadius({
@@ -105,13 +168,14 @@ export const checkIn = async ({
 
       officeLongitude: attendanceLocation.longitude,
 
-      radius: company.settings.attendanceRadius,
+      radius: company.settings?.attendanceRadius || 200,
     });
 
     distanceFromOffice = result.distance;
 
     if (!result.withinRadius) {
-      throw new Error(
+      throw new ApiError(
+        400,
         `You are outside the allowed attendance radius. Distance: ${Math.round(
           result.distance,
         )} meters`,
@@ -123,48 +187,52 @@ export const checkIn = async ({
 
   /*
    * -----------------------------------------
-   * 6. Create attendance
+   * 9. Create attendance
    * -----------------------------------------
    */
 
-  const attendance = await Attendance.findOneAndUpdate(
-    {
-      companyId,
-      employeeId: employee._id,
-      date: today,
-    },
-    {
-      $set: {
-        status: "PRESENT",
+  const attendance = await Attendance.create({
+    companyId,
 
-        checkIn: {
-          timestamp: new Date(),
+    employeeId: employee._id,
 
-          location: {
-            latitude,
-            longitude,
-            accuracy,
-          },
+    date: today,
 
-          verification,
+    status: "PRESENT",
 
-          distanceFromOffice,
-        },
+    scheduledWorkingMinutes: metrics.scheduledWorkingMinutes,
 
-        source,
+    isLate: metrics.isLate,
 
-        createdBy: userId,
-        updatedBy: userId,
+    lateMinutes: metrics.lateMinutes,
+
+    checkIn: {
+      timestamp: checkInTimestamp,
+
+      location: {
+        latitude,
+        longitude,
+        accuracy,
       },
+
+      verification,
+
+      distanceFromOffice,
     },
-    {
-      upsert: true,
-      returnDocument: "after",
-    },
-  );
+
+    source,
+
+    createdBy: userId,
+
+    updatedBy: userId,
+  });
 
   return attendance;
 };
+
+/* =========================================================
+   CHECK OUT
+========================================================= */
 
 export const checkOut = async ({
   userId,
@@ -188,7 +256,7 @@ export const checkOut = async ({
   });
 
   if (!employee) {
-    throw new Error("Active employee profile not found");
+    throw new ApiError(404, "Active employee profile not found");
   }
 
   /*
@@ -200,20 +268,22 @@ export const checkOut = async ({
   const company = await Company.findById(companyId).select("settings");
 
   if (!company) {
-    throw new Error("Company not found");
+    throw new ApiError(404, "Company not found");
   }
 
   if (!company.settings?.attendanceEnabled) {
-    throw new Error("Attendance is disabled for this company");
+    throw new ApiError(400, "Attendance is disabled for this company");
   }
 
   /*
    * -----------------------------------------
-   * 3. Get business date
+   * 3. Determine timezone
    * -----------------------------------------
    */
 
   const timezone = company.settings?.timezone || "Asia/Kolkata";
+
+  const checkOutTimestamp = new Date();
 
   const businessDate = getStartOfBusinessDay(timezone);
 
@@ -230,7 +300,7 @@ export const checkOut = async ({
   });
 
   if (!attendance) {
-    throw new Error("No attendance record found for today");
+    throw new ApiError(400, "No attendance record found for today");
   }
 
   /*
@@ -240,7 +310,7 @@ export const checkOut = async ({
    */
 
   if (!attendance.checkIn?.timestamp) {
-    throw new Error("Employee has not checked in today");
+    throw new ApiError(400, "Employee has not checked in today");
   }
 
   /*
@@ -250,26 +320,65 @@ export const checkOut = async ({
    */
 
   if (attendance.checkOut?.timestamp) {
-    throw new Error("Employee has already checked out today");
+    throw new ApiError(400, "Employee has already checked out today");
   }
 
   /*
    * -----------------------------------------
-   * 7. GPS verification
+   * 7. Calculate checkout metrics
+   *
+   * IMPORTANT:
+   * This must happen AFTER attendance
+   * has been fetched because the calculation
+   * requires the original check-in timestamp.
+   * -----------------------------------------
+   */
+
+  const metrics = await calculateCheckOutMetrics({
+    companyId,
+
+    employee,
+
+    checkInTimestamp: attendance.checkIn.timestamp,
+
+    checkOutTimestamp,
+
+    timezone,
+  });
+
+  /*
+   * -----------------------------------------
+   * 8. GPS verification
    * -----------------------------------------
    */
 
   let verification = "MANUAL";
   let distanceFromOffice = null;
 
-  if (company.settings.gpsAttendanceEnabled) {
-    const attendanceLocation = company.settings.attendanceLocation;
+  const gpsEnabled = company.settings?.gpsAttendanceEnabled === true;
+
+  if (gpsEnabled) {
+    const attendanceLocation = company.settings?.attendanceLocation;
 
     if (
       attendanceLocation?.latitude === undefined ||
-      attendanceLocation?.longitude === undefined
+      attendanceLocation?.latitude === null ||
+      attendanceLocation?.longitude === undefined ||
+      attendanceLocation?.longitude === null
     ) {
-      throw new Error("Company attendance location is not configured");
+      throw new ApiError(400, "Company attendance location is not configured");
+    }
+
+    if (
+      latitude === undefined ||
+      latitude === null ||
+      longitude === undefined ||
+      longitude === null
+    ) {
+      throw new ApiError(
+        400,
+        "Location coordinates are required for GPS attendance",
+      );
     }
 
     const result = isWithinRadius({
@@ -280,13 +389,14 @@ export const checkOut = async ({
 
       officeLongitude: attendanceLocation.longitude,
 
-      radius: company.settings.attendanceRadius,
+      radius: company.settings?.attendanceRadius || 200,
     });
 
     distanceFromOffice = result.distance;
 
     if (!result.withinRadius) {
-      throw new Error(
+      throw new ApiError(
+        400,
         `You are outside the allowed attendance radius. Distance: ${Math.round(
           result.distance,
         )} meters`,
@@ -298,26 +408,12 @@ export const checkOut = async ({
 
   /*
    * -----------------------------------------
-   * 8. Calculate worked duration
-   * -----------------------------------------
-   */
-
-  const checkoutTimestamp = new Date();
-
-  const totalWorkedMinutes = calculateWorkedMinutes({
-    checkIn: attendance.checkIn.timestamp,
-
-    checkOut: checkoutTimestamp,
-  });
-
-  /*
-   * -----------------------------------------
    * 9. Update attendance
    * -----------------------------------------
    */
 
   attendance.checkOut = {
-    timestamp: checkoutTimestamp,
+    timestamp: checkOutTimestamp,
 
     location: {
       latitude,
@@ -330,7 +426,17 @@ export const checkOut = async ({
     distanceFromOffice,
   };
 
-  attendance.totalWorkedMinutes = totalWorkedMinutes;
+  attendance.totalWorkedMinutes = metrics.totalWorkedMinutes;
+
+  attendance.scheduledWorkingMinutes = metrics.scheduledWorkingMinutes;
+
+  attendance.isEarlyCheckout = metrics.isEarlyCheckout;
+
+  attendance.earlyCheckoutMinutes = metrics.earlyCheckoutMinutes;
+
+  attendance.overtimeMinutes = metrics.overtimeMinutes;
+
+  attendance.status = metrics.status;
 
   attendance.source = source;
 
