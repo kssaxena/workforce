@@ -2,7 +2,7 @@ import Company from "../../company/models/company.model.js";
 import Employee from "../../employee/models/employee.model.js";
 import Attendance from "../models/attendance.model.js";
 
-import { ApiError } from "../../../core/errors/ApiError.js";
+import ApiError from "../../../core/errors/ApiError.js";
 
 import { getStartOfBusinessDay } from "../../../core/utils/dateTime.js";
 
@@ -12,10 +12,6 @@ import {
 } from "./attendanceCalculation.service.js";
 
 import { isWithinRadius } from "./geo.service.js";
-
-import Company from "../../company/models/company.model.js";
-import Employee from "../../employee/models/employee.model.js";
-import Attendance from "../models/attendance.model.js";
 
 /* =========================================================
    CHECK IN

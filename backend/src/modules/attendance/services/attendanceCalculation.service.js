@@ -3,7 +3,7 @@ import { DateTime } from "luxon";
 import { WorkSchedule } from "../models/workSchedule.model.js";
 import { AttendancePolicy } from "../models/attendancePolicy.model.js";
 
-import { ApiError } from "../../../core/errors/ApiError.js";
+import ApiError from "../../../core/errors/ApiError.js";
 
 const getScheduleForDate = async ({
   companyId,
