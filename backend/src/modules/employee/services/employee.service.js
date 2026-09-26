@@ -13,6 +13,8 @@ import { hashPassword } from "../../auth/services/password.service.js";
 
 import { WorkSchedule } from "../../attendance/models/workSchedule.model.js";
 
+import ApiError from "../../../core/errors/ApiError.js";
+
 const validateObjectId = (id, message) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new Error(message);
@@ -39,6 +41,7 @@ export const createEmployee = async ({ companyId, createdBy, data }) => {
         employmentType,
         designation,
         departmentId,
+        workScheduleId,
         organizationUnitId,
         reportsTo,
         roleId,
@@ -185,11 +188,13 @@ export const createEmployee = async ({ companyId, createdBy, data }) => {
        * ----------------------------------------------------
        */
 
-      let workScheduleId = data.workScheduleId;
+      let assignedWorkScheduleId = data.workScheduleId;
 
-      if (workScheduleId) {
+      if (assignedWorkScheduleId) {
+        validateObjectId(assignedWorkScheduleId, "Invalid work schedule ID");
+
         const schedule = await WorkSchedule.findOne({
-          _id: workScheduleId,
+          _id: assignedWorkScheduleId,
           companyId,
           isActive: true,
         }).session(session);
@@ -211,7 +216,7 @@ export const createEmployee = async ({ companyId, createdBy, data }) => {
           );
         }
 
-        workScheduleId = defaultSchedule._id;
+        assignedWorkScheduleId = defaultSchedule._id;
       }
 
       const [employee] = await Employee.create(
@@ -224,9 +229,11 @@ export const createEmployee = async ({ companyId, createdBy, data }) => {
             employeeCode: data.employeeCode,
 
             firstName: data.firstName,
+
             lastName: data.lastName,
 
             dateOfBirth: data.dateOfBirth,
+
             gender: data.gender,
 
             joiningDate: data.joiningDate,
@@ -241,14 +248,15 @@ export const createEmployee = async ({ companyId, createdBy, data }) => {
 
             reportsTo: data.reportsTo,
 
-            workScheduleId,
+            workScheduleId: assignedWorkScheduleId,
 
             contact: data.contact,
 
             address: data.address,
 
-            createdBy: userId,
-            updatedBy: userId,
+            createdBy: createdBy,
+
+            updatedBy: createdBy,
           },
         ],
         {

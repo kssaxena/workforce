@@ -7,6 +7,10 @@ import CompanyRepresentative from "../../representative/models/companyRepresenta
 import { hashPassword } from "../../auth/services/password.service.js";
 import ApiError from "../../../core/errors/ApiError.js";
 
+import { initializeCompanyRBAC } from "../../rbac/services/rbac.service.js";
+import { initializeDefaultAttendancePolicy } from "../../attendance/services/attendancePolicy.service.js";
+import { initializeDefaultWorkSchedule } from "../../attendance/services/workSchedule.service.js";
+
 const registerCompany = async ({ companyData, representativeData }) => {
   const session = await mongoose.startSession();
 
@@ -149,6 +153,45 @@ const registerCompany = async ({ companyData, representativeData }) => {
       await company.save({
         session,
         validateBeforeSave: false,
+      });
+
+      /*
+       * ==========================================
+       * 8. INITIALIZE COMPANY RBAC
+       * ==========================================
+       */
+
+      await initializeCompanyRBAC({
+        companyId: company._id,
+        userId: user._id,
+        session,
+      });
+
+      /*
+       * ==========================================
+       * 9. CREATE DEFAULT ATTENDANCE POLICY
+       * ==========================================
+       */
+
+      await initializeDefaultAttendancePolicy({
+        companyId: company._id,
+        userId: user._id,
+        session,
+      });
+
+      /*
+       * ==========================================
+       * 10. CREATE DEFAULT WORK SCHEDULE
+       * ==========================================
+       */
+
+      await initializeDefaultWorkSchedule({
+        companyId: company._id,
+        userId: user._id,
+
+        timezone: company.settings?.timezone || "Asia/Kolkata",
+
+        session,
       });
 
       result = {
