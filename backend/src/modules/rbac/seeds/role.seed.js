@@ -3,7 +3,8 @@ import Permission from "../models/permission.model.js";
 import RolePermission from "../models/rolePermission.model.js";
 
 import { SYSTEM_ROLES } from "../constants/roles.js";
-import { PERMISSIONS } from "../constants/permissions.js";
+// import { PERMISSIONS } from "../constants/permissions.js";
+import { PERMISSIONS } from "../constants/permission.js";
 
 const roleDefinitions = [
   {
