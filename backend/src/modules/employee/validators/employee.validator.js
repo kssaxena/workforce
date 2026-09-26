@@ -29,6 +29,8 @@ export const createEmployeeSchema = Joi.object({
 
   departmentId: Joi.string().hex().length(24).allow(null),
 
+  workScheduleId: Joi.string().hex().length(24).optional().allow(null),
+
   organizationUnitId: Joi.string().hex().length(24).allow(null),
 
   reportsTo: Joi.string().hex().length(24).allow(null),
