@@ -30,9 +30,18 @@ const workScheduleSchema = new mongoose.Schema(
       required: true,
       validate: {
         validator: function (days) {
-          return days.length === 7;
+          if (days.length !== 7) {
+            return false;
+          }
+          const dayNumbers = days.map((day) => day.dayOfWeek);
+          const uniqueDays = new Set(dayNumbers);
+          if (uniqueDays.size !== 7) {
+            return false;
+          }
+          return [0, 1, 2, 3, 4, 5, 6].every((day) => uniqueDays.has(day));
         },
-        message: "Work schedule must contain exactly 7 days",
+        message:
+          "Work schedule must contain exactly one configuration for every day from Sunday to Saturday",
       },
     },
     isDefault: { type: Boolean, default: false },
