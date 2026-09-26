@@ -12,6 +12,7 @@ import {
   attendanceRoutes,
   workScheduleRoutes,
 } from "../modules/attendance/index.js";
+import { holidayRoutes } from "../modules/holiday/index.js";
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use("/employees", employeeRoutes);
 router.use("/attendance", attendanceRoutes);
 router.use("/work-schedules", workScheduleRoutes);
 router.use("/attendance-policy", attendancePolicyRoutes);
+router.use("/holidays", holidayRoutes);
 
 export default router;
