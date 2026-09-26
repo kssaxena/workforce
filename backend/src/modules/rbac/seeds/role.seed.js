@@ -123,7 +123,7 @@ const roleDefinitions = [
   },
 ];
 
-export const seedRoles = async (companyId, userId) => {
+export const seedRoles = async ({ companyId, userId, session = null }) => {
   for (const roleDefinition of roleDefinitions) {
     const role = await Role.findOneAndUpdate(
       {
@@ -133,11 +133,16 @@ export const seedRoles = async (companyId, userId) => {
       {
         $set: {
           name: roleDefinition.name,
+
           description: roleDefinition.description,
+
           isSystemRole: true,
+
           isActive: true,
+
           updatedBy: userId,
         },
+
         $setOnInsert: {
           createdBy: userId,
         },
@@ -145,6 +150,7 @@ export const seedRoles = async (companyId, userId) => {
       {
         upsert: true,
         returnDocument: "after",
+        session,
       },
     );
 
@@ -152,7 +158,7 @@ export const seedRoles = async (companyId, userId) => {
       const permission = await Permission.findOne({
         code: permissionCode,
         isActive: true,
-      });
+      }).session(session);
 
       if (!permission) {
         throw new Error(`Permission not found: ${permissionCode}`);
@@ -170,6 +176,7 @@ export const seedRoles = async (companyId, userId) => {
         },
         {
           upsert: true,
+          session,
         },
       );
     }
