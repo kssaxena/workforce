@@ -332,11 +332,23 @@ export const calculateCheckOutMetrics = async ({
     zone: timezone,
   });
 
-  const totalWorkedMinutes = Math.max(
+  // const totalWorkedMinutes = Math.max(
+  //   0,
+  //   Math.round(checkOutTime.diff(checkInTime, "minutes").minutes) -
+  //     (scheduleDay?.breakMinutes || 0),
+  // );
+
+  const rawWorkedMinutes = Math.max(
     0,
-    Math.round(checkOutTime.diff(checkInTime, "minutes").minutes) -
-      (scheduleDay?.breakMinutes || 0),
+    Math.round(checkOutTime.diff(checkInTime, "minutes").minutes),
   );
+
+  const scheduledBreakMinutes = scheduleDay?.breakMinutes || 0;
+
+  const breakMinutes =
+    rawWorkedMinutes >= scheduledWorkingMinutes ? scheduledBreakMinutes : 0;
+
+  const totalWorkedMinutes = Math.max(0, rawWorkedMinutes - breakMinutes);
 
   if (!isWorkingDay) {
     return {

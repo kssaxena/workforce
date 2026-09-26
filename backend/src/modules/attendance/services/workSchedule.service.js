@@ -142,10 +142,16 @@ export const deactivateWorkSchedule = async ({
     companyId,
     scheduleId,
   });
-
+  if (!schedule.isActive) {
+    throw new Error("Work schedule is already inactive");
+  }
+  if (schedule.isDefault) {
+    throw new Error(
+      "Default work schedule cannot be deactivated. Assign another schedule as default first.",
+    );
+  }
   schedule.isActive = false;
   schedule.updatedBy = userId;
-
   await schedule.save();
 
   return schedule;

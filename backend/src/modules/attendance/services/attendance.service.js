@@ -13,6 +13,10 @@ import {
 
 import { isWithinRadius } from "./geo.service.js";
 
+import Company from "../../company/models/company.model.js";
+import Employee from "../../employee/models/employee.model.js";
+import Attendance from "../models/attendance.model.js";
+
 /* =========================================================
    CHECK IN
 ========================================================= */
