@@ -31,7 +31,7 @@ export const checkInController = asyncHandler(async (req, res) => {
 export const checkOutController = asyncHandler(async (req, res) => {
   const attendance = await checkOut({
     userId: req.user.userId,
-    companyId: req.user.companyId,
+
 
     latitude: req.body.latitude,
     longitude: req.body.longitude,
@@ -62,11 +62,18 @@ export const getMyAttendanceController = asyncHandler(async (req, res) => {
     "settings.timezone",
   );
 
+  if (!company) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, null, "Company not found"));
+  }
+
   const attendance = await getEmployeeAttendance({
     employeeId: employee._id,
     companyId: req.user.companyId,
     startDate: req.query.startDate,
     endDate: req.query.endDate,
+    timezone: company.settings?.timezone || "Asia/Kolkata",
   });
 
   return res
@@ -79,3 +86,4 @@ export const getMyAttendanceController = asyncHandler(async (req, res) => {
       ),
     );
 });
+
