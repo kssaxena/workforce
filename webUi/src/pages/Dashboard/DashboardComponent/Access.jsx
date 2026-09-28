@@ -11,6 +11,7 @@ const Access = () => {
 
 	useEffect(() => {
 		const savedAccessEmployee = localStorage.getItem("accessEmployee");
+        const deleteAccessEmployee = localStorage.removeItem("accessEmployee")
 
 		if (savedAccessEmployee) {
 			try {
@@ -45,7 +46,7 @@ const Access = () => {
 
 		setShowForm(true);
 	};
-    
+
 
 	// Manage existing employee access
 	const handleManageAccess = (employee) => {

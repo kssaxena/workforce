@@ -23,7 +23,7 @@ import Button from "../../../components/Button";
 
 const Overview = ({ data= [], onViewEmployee }) => {
 	const [employees, setEmployees] = useState([]);
-
+	const [currentDate, setCurrentDate] = useState("")
 	const [totalEmployee, setTotalEmployee] = useState(null);
 	const [presentToday, setPresentToday] = useState(null);
 	const [onLeave, setOnLeave] = useState(null);
@@ -35,7 +35,16 @@ const Overview = ({ data= [], onViewEmployee }) => {
 
 	useEffect(() => {
 		const savedEmployees = JSON.parse(localStorage.getItem("employees")) || [];
-
+		localStorage.removeItem("employee")
+		
+		const today = new Date();
+		const date = today.toLocaleDateString("en-IN", {
+			weekday: "long",
+			day: "2-digit",
+			month: "long",
+			year: "numeric",
+		});
+		setCurrentDate(date)
 		setEmployees(savedEmployees);
 	}, []);
 	ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
@@ -46,7 +55,7 @@ const Overview = ({ data= [], onViewEmployee }) => {
 				{/* Greeting */}
 				<div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
 					<div>
-						<p className="text-sm text-slate-400">Monday, 8 September 2026</p>
+						<p className="text-sm text-slate-400">{currentDate}</p>
 
 						<h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
 							Welcome {data.name || "loream"}!

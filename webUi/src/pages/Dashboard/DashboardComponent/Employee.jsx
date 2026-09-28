@@ -12,7 +12,7 @@ const Employee = ({ onViewEmployeeProfile }) => {
 
 	useEffect(() => {
 		const savedEmployees = localStorage.getItem("employees");
-		
+		localStorage.removeItem("employee");
 
 		if (savedEmployees) {
 			try {
@@ -139,7 +139,7 @@ const Employee = ({ onViewEmployeeProfile }) => {
 											{/* <Button
 												LabelName="Delete"
 												className="border-none bg-red-500 "
-												onClick={() => removeEmployees()}
+												onClick={() => deleteEmployee()}
 											/> */}
 										</td>
 									</tr>
