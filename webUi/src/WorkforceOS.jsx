@@ -13,6 +13,7 @@ import ClosingSection from "./components/ClosingSection";
 import Button from "./components/Button"
 import InputBox from "./components/Input";
 
+
 export default function WorkforceOS() {
 	return (
 		<div className="min-h-screen overflow-x-hidden bg-white font-sans text-slate-950 selection:bg-blue-100 selection:text-blue-700">
@@ -27,6 +28,7 @@ export default function WorkforceOS() {
 				<IntelligenceSection />
 				<CompaniesSection />
 				<ClosingSection />
+				
 			</main>
 		</div>
 	);
