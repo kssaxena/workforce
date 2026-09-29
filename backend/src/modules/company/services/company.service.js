@@ -11,6 +11,8 @@ import { initializeCompanyRBAC } from "../../rbac/services/rbac.service.js";
 import { initializeDefaultAttendancePolicy } from "../../attendance/services/attendancePolicy.service.js";
 import { initializeDefaultWorkSchedule } from "../../attendance/services/workSchedule.service.js";
 
+import { initializeDefaultLeaveTypes } from "../../leave/services/leave.service.js";
+
 const registerCompany = async ({ companyData, representativeData }) => {
   const session = await mongoose.startSession();
 
@@ -191,6 +193,12 @@ const registerCompany = async ({ companyData, representativeData }) => {
 
         timezone: company.settings?.timezone || "Asia/Kolkata",
 
+        session,
+      });
+
+      await initializeDefaultLeaveTypes({
+        companyId: company._id,
+        userId: user._id,
         session,
       });
 
