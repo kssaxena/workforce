@@ -1,6 +1,8 @@
 import asyncHandler from "../../../core/middleware/asyncHandler.js";
 import ApiResponse from "../../../core/utils/ApiResponse.js";
 
+import { refreshAccessToken as refreshTokenService } from "../services/auth.service.js";
+
 import loginUser from "../services/auth.service.js";
 
 const login = asyncHandler(async (req, res) => {
@@ -45,5 +47,46 @@ const login = asyncHandler(async (req, res) => {
     ),
   );
 });
+
+const refreshToken = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies?.refreshToken;
+
+  const result = await refreshTokenService({
+    refreshToken,
+
+    ipAddress: req.ip,
+
+    userAgent: req.get("user-agent"),
+  });
+
+  res.cookie("refreshToken", result.refreshToken, {
+    httpOnly: true,
+
+    secure: process.env.NODE_ENV === "production",
+
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+
+    maxAge:
+      Number(process.env.REFRESH_TOKEN_EXPIRY_DAYS || 30) * 24 * 60 * 60 * 1000,
+  });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        accessToken: result.accessToken,
+
+        sessionId: result.sessionId,
+
+        user: result.user,
+
+        companyId: result.companyId,
+      },
+      "Token refreshed successfully",
+    ),
+  );
+});
+
+export { login, refreshToken };
 
 export default login;
