@@ -1,12 +1,12 @@
 import React from "react";
-import WorkforceOS from "./WorkforceOS";
 import { BrowserRouter } from "react-router-dom";
-import AppRoutes from "./Routes/routes";
+
+import AppRoutes from "./routes/Routes";
 
 export default function App() {
-	return (
-		<BrowserRouter>
-			<AppRoutes />
-		</BrowserRouter>
-	);
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
 }
