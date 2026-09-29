@@ -13,6 +13,10 @@ import {
 
 import { isWithinRadius } from "./geo.service.js";
 
+import { isEmployeeOnApprovedLeave } from "../../leave/services/leave.service.js";
+
+import { getHolidayForDate } from "../../holiday/services/holiday.service.js";
+
 /* =========================================================
    CHECK IN
 ========================================================= */
@@ -60,7 +64,7 @@ export const checkIn = async ({
 
   /*
    * -----------------------------------------
-   * 3. Determine timezone
+   * 3. Determine timezone and timestamp
    * -----------------------------------------
    */
 
@@ -70,7 +74,51 @@ export const checkIn = async ({
 
   /*
    * -----------------------------------------
-   * 4. Determine attendance metrics
+   * 4. Determine business date
+   * -----------------------------------------
+   */
+
+  const today = getStartOfBusinessDay(timezone);
+
+  /*
+   * -----------------------------------------
+   * 5. Check company holiday
+   * -----------------------------------------
+   */
+
+  const holiday = await getHolidayForDate({
+    companyId,
+    date: today,
+    timezone,
+  });
+
+  if (holiday && !holiday.isOptional) {
+    throw new ApiError(400, `Today is a holiday: ${holiday.name}`);
+  }
+
+  /*
+   * -----------------------------------------
+   * 6. Check approved employee leave
+   * -----------------------------------------
+   */
+
+  const approvedLeave = await isEmployeeOnApprovedLeave({
+    companyId,
+    employeeId: employee._id,
+    date: today,
+    timezone,
+  });
+
+  if (approvedLeave) {
+    throw new ApiError(
+      400,
+      `You are on approved ${approvedLeave.leaveTypeId?.name || "leave"} today`,
+    );
+  }
+
+  /*
+   * -----------------------------------------
+   * 7. Determine attendance metrics
    * -----------------------------------------
    */
 
@@ -83,7 +131,7 @@ export const checkIn = async ({
 
   /*
    * -----------------------------------------
-   * 5. Prevent check-in on non-working day
+   * 8. Prevent check-in on non-working day
    * -----------------------------------------
    */
 
@@ -93,15 +141,7 @@ export const checkIn = async ({
 
   /*
    * -----------------------------------------
-   * 6. Determine business date
-   * -----------------------------------------
-   */
-
-  const today = getStartOfBusinessDay(timezone);
-
-  /*
-   * -----------------------------------------
-   * 7. Prevent duplicate check-in
+   * 9. Prevent duplicate check-in
    * -----------------------------------------
    */
 
@@ -117,7 +157,7 @@ export const checkIn = async ({
 
   /*
    * -----------------------------------------
-   * 8. GPS verification
+   * 10. GPS verification
    * -----------------------------------------
    */
 
@@ -130,6 +170,9 @@ export const checkIn = async ({
     const attendanceLocation = company.settings?.attendanceLocation;
 
     /*
+     * Company attendance location
+     * must be configured.
+     *
      * IMPORTANT:
      * Don't use !latitude / !longitude here.
      * 0 is a valid coordinate.
@@ -145,7 +188,7 @@ export const checkIn = async ({
     }
 
     /*
-     * Employee location must also exist
+     * Employee location must also exist.
      */
 
     if (
@@ -187,45 +230,60 @@ export const checkIn = async ({
 
   /*
    * -----------------------------------------
-   * 9. Create attendance
+   * 11. Create attendance
    * -----------------------------------------
    */
 
-  const attendance = await Attendance.create({
-    companyId,
+  let attendance;
 
-    employeeId: employee._id,
+  try {
+    attendance = await Attendance.create({
+      companyId,
 
-    date: today,
+      employeeId: employee._id,
 
-    status: "PRESENT",
+      date: today,
 
-    scheduledWorkingMinutes: metrics.scheduledWorkingMinutes,
+      status: "PRESENT",
 
-    isLate: metrics.isLate,
+      scheduledWorkingMinutes: metrics.scheduledWorkingMinutes,
 
-    lateMinutes: metrics.lateMinutes,
+      isLate: metrics.isLate,
 
-    checkIn: {
-      timestamp: checkInTimestamp,
+      lateMinutes: metrics.lateMinutes,
 
-      location: {
-        latitude,
-        longitude,
-        accuracy,
+      checkIn: {
+        timestamp: checkInTimestamp,
+
+        location: {
+          latitude,
+          longitude,
+          accuracy,
+        },
+
+        verification,
+
+        distanceFromOffice,
       },
 
-      verification,
+      source,
 
-      distanceFromOffice,
-    },
+      createdBy: userId,
 
-    source,
+      updatedBy: userId,
+    });
+  } catch (error) {
+    /*
+     * Unique index protection against
+     * simultaneous duplicate check-ins.
+     */
 
-    createdBy: userId,
+    if (error?.code === 11000) {
+      throw new ApiError(409, "Employee has already checked in today");
+    }
 
-    updatedBy: userId,
-  });
+    throw error;
+  }
 
   return attendance;
 };
@@ -277,7 +335,7 @@ export const checkOut = async ({
 
   /*
    * -----------------------------------------
-   * 3. Determine timezone
+   * 3. Determine timezone and timestamp
    * -----------------------------------------
    */
 
@@ -285,22 +343,44 @@ export const checkOut = async ({
 
   const checkOutTimestamp = new Date();
 
-  const businessDate = getStartOfBusinessDay(timezone);
-
   /*
    * -----------------------------------------
-   * 4. Find today's attendance
+   * 4. Find open attendance
+   *
+   * IMPORTANT:
+   *
+   * We intentionally DO NOT search by
+   * today's business date.
+   *
+   * This is required for overnight shifts.
+   *
+   * Example:
+   *
+   * Monday 22:00 -> Check in
+   * Tuesday 06:00 -> Check out
+   *
+   * The attendance belongs to Monday.
    * -----------------------------------------
    */
 
   const attendance = await Attendance.findOne({
     companyId,
+
     employeeId: employee._id,
-    date: businessDate,
+
+    "checkIn.timestamp": {
+      $exists: true,
+    },
+
+    "checkOut.timestamp": {
+      $exists: false,
+    },
+  }).sort({
+    "checkIn.timestamp": -1,
   });
 
   if (!attendance) {
-    throw new ApiError(400, "No attendance record found for today");
+    throw new ApiError(400, "No open attendance record found");
   }
 
   /*
@@ -310,7 +390,7 @@ export const checkOut = async ({
    */
 
   if (!attendance.checkIn?.timestamp) {
-    throw new ApiError(400, "Employee has not checked in today");
+    throw new ApiError(400, "Employee has not checked in");
   }
 
   /*
@@ -320,7 +400,7 @@ export const checkOut = async ({
    */
 
   if (attendance.checkOut?.timestamp) {
-    throw new ApiError(400, "Employee has already checked out today");
+    throw new ApiError(400, "Employee has already checked out");
   }
 
   /*
@@ -328,9 +408,10 @@ export const checkOut = async ({
    * 7. Calculate checkout metrics
    *
    * IMPORTANT:
-   * This must happen AFTER attendance
-   * has been fetched because the calculation
-   * requires the original check-in timestamp.
+   *
+   * The original check-in timestamp is
+   * used here so overnight shifts are
+   * calculated correctly.
    * -----------------------------------------
    */
 
@@ -360,6 +441,11 @@ export const checkOut = async ({
   if (gpsEnabled) {
     const attendanceLocation = company.settings?.attendanceLocation;
 
+    /*
+     * Company attendance location
+     * must be configured.
+     */
+
     if (
       attendanceLocation?.latitude === undefined ||
       attendanceLocation?.latitude === null ||
@@ -368,6 +454,10 @@ export const checkOut = async ({
     ) {
       throw new ApiError(400, "Company attendance location is not configured");
     }
+
+    /*
+     * Employee location must exist.
+     */
 
     if (
       latitude === undefined ||

@@ -144,4 +144,85 @@ const loginUser = async ({ email, password, ipAddress, userAgent }) => {
   };
 };
 
+const refreshAccessToken = async ({ refreshToken, ipAddress, userAgent }) => {
+  if (!refreshToken) {
+    throw new ApiError(401, "Refresh token is required");
+  }
+
+  const refreshTokenHash = hashRefreshToken(refreshToken);
+
+  const session = await Session.findOne({
+    refreshTokenHash,
+    revokedAt: null,
+  });
+
+  if (!session) {
+    throw new ApiError(401, "Invalid refresh token");
+  }
+
+  if (session.expiresAt <= new Date()) {
+    throw new ApiError(401, "Refresh token has expired");
+  }
+
+  const user = await User.findById(session.userId);
+
+  if (!user) {
+    throw new ApiError(401, "User account not found");
+  }
+
+  if (user.status !== "ACTIVE") {
+    throw new ApiError(403, "This account is not active");
+  }
+
+  const representative = await CompanyRepresentative.findOne({
+    userId: user._id,
+    companyId: session.companyId,
+    status: "ACTIVE",
+  });
+
+  if (!representative) {
+    throw new ApiError(403, "No active company association found");
+  }
+
+  /*
+   * Rotate refresh token.
+   */
+
+  const newRefreshToken = generateRefreshToken();
+
+  const newRefreshTokenHash = hashRefreshToken(newRefreshToken);
+
+  const newAccessToken = generateAccessToken({
+    userId: user._id,
+    companyId: representative.companyId,
+  });
+
+  session.refreshTokenHash = newRefreshTokenHash;
+
+  session.ipAddress = ipAddress;
+
+  session.userAgent = userAgent;
+
+  await session.save();
+
+  return {
+    accessToken: newAccessToken,
+
+    refreshToken: newRefreshToken,
+
+    sessionId: session._id,
+
+    user: {
+      _id: user._id,
+      email: user.email,
+      phone: user.phone,
+      status: user.status,
+    },
+
+    companyId: representative.companyId,
+  };
+};
+
+export { loginUser, refreshAccessToken };
+
 export default loginUser;
