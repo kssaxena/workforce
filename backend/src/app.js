@@ -2,26 +2,54 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
+import routes from "./routes/index.js";
+import errorHandler from "./core/errors/errorHandler.js";
+
 const app = express();
 
+/* =========================================
+   REQUEST LOGGER — MUST BE BEFORE CORS
+========================================= */
+
+app.use((req, res, next) => {
+  console.log(
+    `➡️ ${req.method} ${req.originalUrl}`,
+    "| Origin:",
+    req.headers.origin || "NO ORIGIN",
+  );
+
+  next();
+});
+
+/* =========================================
+   CORS
+========================================= */
+
 const allowedOrigins = [
-  process.env.CLIENT_URL,
   "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+
   "http://127.0.0.1:5173",
-].filter(Boolean);
+  "http://127.0.0.1:5174",
+  "http://127.0.0.1:5175",
+];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests without an Origin header
-      // such as Postman/server-to-server requests.
+      console.log("🔎 CORS Origin:", origin);
+
       if (!origin) {
         return callback(null, true);
       }
 
       if (allowedOrigins.includes(origin)) {
+        console.log("✅ CORS allowed:", origin);
         return callback(null, true);
       }
+
+      console.log("❌ CORS rejected:", origin);
 
       return callback(new Error(`CORS blocked origin: ${origin}`));
     },
@@ -44,9 +72,6 @@ app.get("/health", (req, res) => {
     message: "Workforce OS API is running",
   });
 });
-
-import routes from "./routes/index.js";
-import errorHandler from "./core/errors/errorHandler.js";
 
 app.use("/api/v1", routes);
 

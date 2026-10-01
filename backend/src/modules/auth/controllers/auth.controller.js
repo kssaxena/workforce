@@ -1,35 +1,46 @@
 import asyncHandler from "../../../core/middleware/asyncHandler.js";
 import ApiResponse from "../../../core/utils/ApiResponse.js";
+import ApiError from "../../../core/errors/ApiError.js";
 
-import { refreshAccessToken as refreshTokenService } from "../services/auth.service.js";
+import {
+  loginUser,
+  getAuthenticatedUser,
+  refreshUserSession,
+  revokeSession,
+} from "../services/auth.service.js";
 
-import loginUser from "../services/auth.service.js";
+const getRefreshCookieOptions = () => ({
+  httpOnly: true,
+
+  secure: process.env.NODE_ENV === "production",
+
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+
+  maxAge:
+    Number(process.env.REFRESH_TOKEN_EXPIRY_DAYS || 30) * 24 * 60 * 60 * 1000,
+
+  path: "/api/v1/auth",
+});
+
+const setRefreshCookie = (res, refreshToken) => {
+  res.cookie("refreshToken", refreshToken, getRefreshCookieOptions());
+};
 
 const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, companyId, portal } = req.body;
 
   const result = await loginUser({
     email,
     password,
+    companyId,
+    portal,
 
     ipAddress: req.ip,
 
     userAgent: req.get("user-agent"),
   });
 
-  /*
-   * Store refresh token in HTTP-only cookie.
-   */
-
-  res.cookie("refreshToken", result.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-
-    maxAge:
-      Number(process.env.REFRESH_TOKEN_EXPIRY_DAYS || 30) * 24 * 60 * 60 * 1000,
-  });
+  setRefreshCookie(res, result.refreshToken);
 
   return res.status(200).json(
     new ApiResponse(
@@ -41,34 +52,46 @@ const login = asyncHandler(async (req, res) => {
 
         user: result.user,
 
-        companyId: result.companyId,
+        company: result.company,
+
+        employee: result.employee,
+
+        roles: result.roles,
+
+        roleCodes: result.roleCodes,
+
+        permissions: result.permissions,
       },
       "Login successful",
     ),
   );
 });
 
-const refreshToken = asyncHandler(async (req, res) => {
+const me = asyncHandler(async (req, res) => {
+  const result = await getAuthenticatedUser({
+    userId: req.user.userId,
+    companyId: req.user.companyId,
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, result, "Authenticated user fetched successfully"),
+    );
+});
+
+const refresh = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies?.refreshToken;
 
-  const result = await refreshTokenService({
+  if (!refreshToken) {
+    throw new ApiError(401, "Refresh token is required");
+  }
+
+  const result = await refreshUserSession({
     refreshToken,
-
-    ipAddress: req.ip,
-
-    userAgent: req.get("user-agent"),
   });
 
-  res.cookie("refreshToken", result.refreshToken, {
-    httpOnly: true,
-
-    secure: process.env.NODE_ENV === "production",
-
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-
-    maxAge:
-      Number(process.env.REFRESH_TOKEN_EXPIRY_DAYS || 30) * 24 * 60 * 60 * 1000,
-  });
+  setRefreshCookie(res, result.refreshToken);
 
   return res.status(200).json(
     new ApiResponse(
@@ -80,13 +103,30 @@ const refreshToken = asyncHandler(async (req, res) => {
 
         user: result.user,
 
-        companyId: result.companyId,
+        company: result.company,
+
+        employee: result.employee,
+
+        roles: result.roles,
+
+        roleCodes: result.roleCodes,
+
+        permissions: result.permissions,
       },
-      "Token refreshed successfully",
+      "Session refreshed successfully",
     ),
   );
 });
 
-export { login, refreshToken };
+const logout = asyncHandler(async (req, res) => {
+  await revokeSession({
+    userId: req.user.userId,
+    sessionId: req.user.sessionId,
+  });
 
-export default login;
+  res.clearCookie("refreshToken", getRefreshCookieOptions());
+
+  return res.status(200).json(new ApiResponse(200, null, "Logout successful"));
+});
+
+export { login, me, refresh, logout };
