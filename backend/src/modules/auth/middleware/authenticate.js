@@ -1,4 +1,5 @@
 import ApiError from "../../../core/errors/ApiError.js";
+
 import { verifyAccessToken } from "../services/token.service.js";
 
 const authenticate = (req, res, next) => {
@@ -27,11 +28,14 @@ const authenticate = (req, res, next) => {
 
     req.user = {
       userId: payload.sub,
+
       companyId: payload.companyId,
+
+      sessionId: payload.sessionId || null,
     };
 
     next();
-  } catch (error) {
+  } catch {
     return next(new ApiError(401, "Invalid or expired access token"));
   }
 };
