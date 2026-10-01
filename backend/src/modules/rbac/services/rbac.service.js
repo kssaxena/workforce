@@ -1,26 +1,13 @@
 import UserRole from "../models/userRole.model.js";
 import Role from "../models/role.model.js";
 
+import { seedPermissions } from "../seeds/permission.seed.js";
 import { seedRoles } from "../seeds/role.seed.js";
 
 export const initializeCompanyRBAC = async ({ companyId, userId, session }) => {
-  /*
-   * -----------------------------------------
-   * 1. Create company roles
-   * -----------------------------------------
-   */
+  await seedPermissions();
 
-  await seedRoles({
-    companyId,
-    userId,
-    session,
-  });
-
-  /*
-   * -----------------------------------------
-   * 2. Find SUPER_ADMIN role
-   * -----------------------------------------
-   */
+  await seedRoles(companyId, userId, session);
 
   const superAdminRole = await Role.findOne({
     companyId,
@@ -31,12 +18,6 @@ export const initializeCompanyRBAC = async ({ companyId, userId, session }) => {
   if (!superAdminRole) {
     throw new Error("SUPER_ADMIN role could not be created");
   }
-
-  /*
-   * -----------------------------------------
-   * 3. Assign SUPER_ADMIN
-   * -----------------------------------------
-   */
 
   await UserRole.findOneAndUpdate(
     {
@@ -53,7 +34,7 @@ export const initializeCompanyRBAC = async ({ companyId, userId, session }) => {
     },
     {
       upsert: true,
-      returnDocument: "after",
+      new: true,
       session,
     },
   );

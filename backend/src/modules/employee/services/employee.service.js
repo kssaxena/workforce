@@ -254,8 +254,7 @@ export const createEmployee = async ({ companyId, createdBy, data }) => {
 
             address: data.address,
 
-            createdBy: createdBy,
-
+            createdBy,
             updatedBy: createdBy,
           },
         ],

@@ -5,13 +5,14 @@ import User from "../../auth/models/user.model.js";
 import CompanyRepresentative from "../../representative/models/companyRepresentative.model.js";
 
 import { hashPassword } from "../../auth/services/password.service.js";
-import ApiError from "../../../core/errors/ApiError.js";
 
 import { initializeCompanyRBAC } from "../../rbac/services/rbac.service.js";
-import { initializeDefaultAttendancePolicy } from "../../attendance/services/attendancePolicy.service.js";
+
 import { initializeDefaultWorkSchedule } from "../../attendance/services/workSchedule.service.js";
 
-import { initializeDefaultLeaveTypes } from "../../leave/services/leave.service.js";
+import { initializeDefaultAttendancePolicy } from "../../attendance/services/attendancePolicy.service.js";
+
+import ApiError from "../../../core/errors/ApiError.js";
 
 const registerCompany = async ({ companyData, representativeData }) => {
   const session = await mongoose.startSession();
@@ -29,7 +30,7 @@ const registerCompany = async ({ companyData, representativeData }) => {
       const existingUser = await User.findOne({
         $or: [
           {
-            email: representativeData.email,
+            email: representativeData.email.toLowerCase(),
           },
           {
             phone: representativeData.phone,
@@ -51,7 +52,7 @@ const registerCompany = async ({ companyData, representativeData }) => {
        */
 
       const existingCompany = await Company.findOne({
-        email: companyData.email,
+        email: companyData.email.toLowerCase(),
       }).session(session);
 
       if (existingCompany) {
@@ -75,10 +76,12 @@ const registerCompany = async ({ companyData, representativeData }) => {
       const [user] = await User.create(
         [
           {
-            email: representativeData.email,
+            email: representativeData.email.toLowerCase(),
             phone: representativeData.phone,
             password: hashedPassword,
+
             status: "ACTIVE",
+
             emailVerified: false,
             phoneVerified: false,
           },
@@ -99,12 +102,16 @@ const registerCompany = async ({ companyData, representativeData }) => {
           {
             ...companyData,
 
+            email: companyData.email.toLowerCase(),
+
             status: "ACTIVE",
 
             subscription: {
               plan: "STARTER",
               status: "TRIAL",
+
               trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+
               startsAt: new Date(),
             },
           },
@@ -116,7 +123,7 @@ const registerCompany = async ({ companyData, representativeData }) => {
 
       /*
        * ==========================================
-       * 6. CREATE REPRESENTATIVE
+       * 6. CREATE PRIMARY REPRESENTATIVE
        * ==========================================
        */
 
@@ -127,15 +134,12 @@ const registerCompany = async ({ companyData, representativeData }) => {
             companyId: company._id,
 
             firstName: representativeData.firstName,
-
             lastName: representativeData.lastName,
-
             designation: representativeData.designation,
 
             representativeType: "OWNER",
 
             status: "ACTIVE",
-
             isPrimary: true,
           },
         ],
@@ -146,7 +150,7 @@ const registerCompany = async ({ companyData, representativeData }) => {
 
       /*
        * ==========================================
-       * 7. UPDATE COMPANY CREATED BY
+       * 7. COMPANY CREATED BY
        * ==========================================
        */
 
@@ -159,8 +163,18 @@ const registerCompany = async ({ companyData, representativeData }) => {
 
       /*
        * ==========================================
-       * 8. INITIALIZE COMPANY RBAC
+       * 8. INITIALIZE RBAC
        * ==========================================
+       *
+       * This automatically creates:
+       *
+       * SUPER_ADMIN
+       * HR_ADMIN
+       * MANAGER
+       * TEAM_LEADER
+       * EMPLOYEE
+       *
+       * and assigns SUPER_ADMIN to the owner.
        */
 
       await initializeCompanyRBAC({
@@ -171,32 +185,24 @@ const registerCompany = async ({ companyData, representativeData }) => {
 
       /*
        * ==========================================
-       * 9. CREATE DEFAULT ATTENDANCE POLICY
-       * ==========================================
-       */
-
-      await initializeDefaultAttendancePolicy({
-        companyId: company._id,
-        userId: user._id,
-        session,
-      });
-
-      /*
-       * ==========================================
-       * 10. CREATE DEFAULT WORK SCHEDULE
+       * 9. DEFAULT WORK SCHEDULE
        * ==========================================
        */
 
       await initializeDefaultWorkSchedule({
         companyId: company._id,
         userId: user._id,
-
         timezone: company.settings?.timezone || "Asia/Kolkata",
-
         session,
       });
 
-      await initializeDefaultLeaveTypes({
+      /*
+       * ==========================================
+       * 10. DEFAULT ATTENDANCE POLICY
+       * ==========================================
+       */
+
+      await initializeDefaultAttendancePolicy({
         companyId: company._id,
         userId: user._id,
         session,
