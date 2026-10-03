@@ -5,7 +5,7 @@ import RegisterPage from "../pages/auth/RegisterPage.jsx";
 import LoginPage from "../pages/auth/LoginPage.jsx";
 
 import ProtectedRoute from "../components/common/ProtectedRoute.jsx";
-// import Dashboard from "../pages/dashboard/Dashboard.jsx";
+import Dashboard from "../pages/dashboard/Dashboard.jsx";
 
 const AppRoutes = () => {
   return (
@@ -25,7 +25,7 @@ const AppRoutes = () => {
       ========================= */}
 
       <Route element={<ProtectedRoute />}>
-        {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+        <Route path="/dashboard" element={<Dashboard />} />
       </Route>
     </Routes>
   );
