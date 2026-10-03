@@ -111,8 +111,12 @@ const Register = () => {
         });
       }, 1200);
     } catch (error) {
+      console.error("COMPANY REGISTRATION ERROR:", error);
+
       setError(
-        error?.data?.message || error?.message || "Unable to register company.",
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to register company.",
       );
     } finally {
       setLoading(false);

@@ -73,9 +73,11 @@ const AuthProvider = ({ children }) => {
         companyId,
       });
 
-      applyAuthData(response.data);
+      const authData = response.data.data;
 
-      return response.data;
+      applyAuthData(authData);
+
+      return authData;
     },
     [applyAuthData],
   );
@@ -103,7 +105,7 @@ const AuthProvider = ({ children }) => {
           response = await refreshSession();
         }
 
-        applyAuthData(response.data);
+        applyAuthData(response.data.data);
       } catch {
         clearAuth();
       } finally {
