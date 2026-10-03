@@ -14,7 +14,17 @@ const startServer = async () => {
     await initializeRBAC();
 
     const server = app.listen(PORT, () => {
-      console.log(`Workforce OS running on port ${PORT}`);
+      console.log("\n");
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log("🚀 WORKFORCE OS BACKEND");
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log(`PORT     : ${PORT}`);
+      console.log(`ENV      : ${process.env.NODE_ENV}`);
+      console.log(`CLIENT   : ${process.env.CLIENT_URL}`);
+      console.log("DATABASE :", process.env.DB_NAME);
+      console.log("STATUS   : RUNNING");
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log("\n");
     });
 
     const shutdown = async (signal) => {
@@ -31,19 +41,19 @@ const startServer = async () => {
     process.on("SIGTERM", () => shutdown("SIGTERM"));
     process.on("SIGINT", () => shutdown("SIGINT"));
 
-    process.on("SIGTERM", () => {
-      server.close(() => {
-        console.log("Server closed");
-        process.exit(0);
-      });
-    });
+    // process.on("SIGTERM", () => {
+    //   server.close(() => {
+    //     console.log("Server closed");
+    //     process.exit(0);
+    //   });
+    // });
 
-    process.on("SIGINT", () => {
-      server.close(() => {
-        console.log("Server closed");
-        process.exit(0);
-      });
-    });
+    // process.on("SIGINT", () => {
+    //   server.close(() => {
+    //     console.log("Server closed");
+    //     process.exit(0);
+    //   });
+    // });
   } catch (error) {
     console.error("Application startup failed:", error);
     process.exit(1);

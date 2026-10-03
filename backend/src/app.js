@@ -8,15 +8,33 @@ import errorHandler from "./core/errors/errorHandler.js";
 const app = express();
 
 /* =========================================
-   REQUEST LOGGER — MUST BE BEFORE CORS
+   API REQUEST / RESPONSE LOGGER
 ========================================= */
 
 app.use((req, res, next) => {
-  console.log(
-    `➡️ ${req.method} ${req.originalUrl}`,
-    "| Origin:",
-    req.headers.origin || "NO ORIGIN",
-  );
+  const startTime = Date.now();
+
+  console.log("\n");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("➡️  INCOMING REQUEST");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("METHOD :", req.method);
+  console.log("URL    :", req.originalUrl);
+  console.log("ORIGIN :", req.headers.origin || "NO ORIGIN");
+  console.log("IP     :", req.ip);
+
+  res.on("finish", () => {
+    const duration = Date.now() - startTime;
+
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("⬅️  RESPONSE");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("METHOD :", req.method);
+    console.log("URL    :", req.originalUrl);
+    console.log("STATUS :", res.statusCode);
+    console.log("TIME   :", `${duration}ms`);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+  });
 
   next();
 });
