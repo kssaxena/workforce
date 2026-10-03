@@ -7,7 +7,11 @@ import { seedRoles } from "../seeds/role.seed.js";
 export const initializeCompanyRBAC = async ({ companyId, userId, session }) => {
   await seedPermissions();
 
-  await seedRoles(companyId, userId, session);
+  await seedRoles({
+    companyId,
+    userId,
+    session,
+  });
 
   const superAdminRole = await Role.findOne({
     companyId,

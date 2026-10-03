@@ -14,6 +14,10 @@ import { initializeDefaultAttendancePolicy } from "../../attendance/services/att
 
 import ApiError from "../../../core/errors/ApiError.js";
 
+import { WorkSchedule } from "../../attendance/models/workSchedule.model.js";
+
+import { AttendancePolicy } from "../../attendance/models/attendancePolicy.model.js";
+
 const registerCompany = async ({ companyData, representativeData }) => {
   const session = await mongoose.startSession();
 
@@ -148,6 +152,136 @@ const registerCompany = async ({ companyData, representativeData }) => {
         },
       );
 
+      await initializeCompanyRBAC({
+        companyId: company._id,
+        userId: user._id,
+        session,
+      });
+
+      const defaultDays = [
+        {
+          dayOfWeek: 0,
+          isWorkingDay: false,
+          startTime: "09:00",
+          endTime: "18:00",
+          breakMinutes: 60,
+        },
+        {
+          dayOfWeek: 1,
+          isWorkingDay: true,
+          startTime: "09:00",
+          endTime: "18:00",
+          breakMinutes: 60,
+        },
+        {
+          dayOfWeek: 2,
+          isWorkingDay: true,
+          startTime: "09:00",
+          endTime: "18:00",
+          breakMinutes: 60,
+        },
+        {
+          dayOfWeek: 3,
+          isWorkingDay: true,
+          startTime: "09:00",
+          endTime: "18:00",
+          breakMinutes: 60,
+        },
+        {
+          dayOfWeek: 4,
+          isWorkingDay: true,
+          startTime: "09:00",
+          endTime: "18:00",
+          breakMinutes: 60,
+        },
+        {
+          dayOfWeek: 5,
+          isWorkingDay: true,
+          startTime: "09:00",
+          endTime: "18:00",
+          breakMinutes: 60,
+        },
+        {
+          dayOfWeek: 6,
+          isWorkingDay: true,
+          startTime: "09:00",
+          endTime: "18:00",
+          breakMinutes: 60,
+        },
+      ];
+
+      // await WorkSchedule.create(
+      //   [
+      //     {
+      //       companyId: company._id,
+
+      //       name: "Default Work Schedule",
+
+      //       code: "DEFAULT",
+
+      //       description: "Default company work schedule",
+
+      //       timezone: company.settings?.timezone || "Asia/Kolkata",
+
+      //       days: defaultDays,
+
+      //       isDefault: true,
+
+      //       isActive: true,
+
+      //       createdBy: user._id,
+
+      //       updatedBy: user._id,
+      //     },
+      //   ],
+      //   {
+      //     session,
+      //   },
+      // );
+
+      // await AttendancePolicy.create(
+      //   [
+      //     {
+      //       companyId: company._id,
+
+      //       workingHours: 8,
+
+      //       workingMinutes: 480,
+
+      //       lateArrivalGraceMinutes: 15,
+
+      //       earlyDepartureGraceMinutes: 15,
+
+      //       overtimeEnabled: false,
+
+      //       minimumOvertimeMinutes: 30,
+
+      //       halfDayEnabled: true,
+
+      //       halfDayAfterMinutes: 240,
+
+      //       allowLateCheckIn: true,
+
+      //       allowEarlyCheckout: true,
+
+      //       requireCheckOut: true,
+
+      //       breakEnabled: true,
+
+      //       breakMinutes: 60,
+
+      //       isActive: true,
+
+      //       createdBy: user._id,
+
+      //       updatedBy: user._id,
+      //     },
+      //   ],
+      //   {
+      //     session,
+      //   },
+      // );
+
       /*
        * ==========================================
        * 7. COMPANY CREATED BY
@@ -176,12 +310,6 @@ const registerCompany = async ({ companyData, representativeData }) => {
        *
        * and assigns SUPER_ADMIN to the owner.
        */
-
-      await initializeCompanyRBAC({
-        companyId: company._id,
-        userId: user._id,
-        session,
-      });
 
       /*
        * ==========================================

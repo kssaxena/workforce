@@ -236,6 +236,30 @@ const permissionDefinitions = [
     code: PERMISSIONS.PERMISSION_READ,
     description: "View permissions",
   },
+  {
+    code: PERMISSIONS.HOLIDAY_CREATE,
+    name: "Create Holiday",
+    description: "Create company holidays",
+    module: "HOLIDAY",
+  },
+  {
+    code: PERMISSIONS.HOLIDAY_READ,
+    name: "Read Holiday",
+    description: "View company holidays",
+    module: "HOLIDAY",
+  },
+  {
+    code: PERMISSIONS.HOLIDAY_UPDATE,
+    name: "Update Holiday",
+    description: "Update company holidays",
+    module: "HOLIDAY",
+  },
+  {
+    code: PERMISSIONS.HOLIDAY_DELETE,
+    name: "Delete Holiday",
+    description: "Delete company holidays",
+    module: "HOLIDAY",
+  },
 ];
 
 export const seedPermissions = async () => {
