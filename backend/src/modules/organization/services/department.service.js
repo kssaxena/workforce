@@ -5,14 +5,6 @@ import Department from "../models/department.model.js";
 export const createDepartment = async ({ companyId, userId, data }) => {
   const { name, code, description, parentDepartmentId } = data;
 
-  // Prevent department from becoming its own parent
-  if (
-    parentDepartmentId &&
-    parentDepartmentId.toString() === companyId.toString()
-  ) {
-    throw new Error("Invalid parent department");
-  }
-
   // Verify parent belongs to the same company
   if (parentDepartmentId) {
     const parentDepartment = await Department.findOne({
