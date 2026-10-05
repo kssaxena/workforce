@@ -7,7 +7,10 @@ import { PERMISSIONS } from "../../rbac/constants/permission.js";
 
 import validate from "../../../core/middleware/validate.js";
 
-import { createEmployeeSchema } from "../validators/employee.validator.js";
+import {
+  createEmployeeSchema,
+  updateEmployeeReportingSchema,
+} from "../validators/employee.validator.js";
 
 import {
   createEmployeeController,
@@ -15,6 +18,7 @@ import {
   getEmployeesController,
   getDirectReportsController,
   getHierarchyController,
+  updateEmployeeReportingController,
 } from "../controllers/employee.controller.js";
 
 const router = Router();
@@ -43,6 +47,13 @@ router.get(
   "/:employeeId/direct-reports",
   authorize(PERMISSIONS.EMPLOYEE_READ),
   getDirectReportsController,
+);
+
+router.patch(
+  "/:employeeId/reporting-manager",
+  authorize(PERMISSIONS.EMPLOYEE_UPDATE),
+  validate(updateEmployeeReportingSchema),
+  updateEmployeeReportingController,
 );
 
 router.get(
