@@ -8,6 +8,11 @@ import {
   getVisibleEmployeeById,
 } from "../services/employeeQuery.service.js";
 
+import {
+  getDirectReports,
+  getVisibleHierarchy,
+} from "../services/employeeHierarchy.service.js";
+
 export const createEmployeeController = asyncHandler(async (req, res) => {
   const result = await createEmployee({
     companyId: req.user.companyId,
@@ -56,4 +61,35 @@ export const getEmployeeController = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, employee, "Employee fetched successfully"));
+});
+
+export const getDirectReportsController = asyncHandler(async (req, res) => {
+  const employees = await getDirectReports({
+    userId: req.user.userId,
+    companyId: req.user.companyId,
+    employeeId: req.params.employeeId,
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, employees, "Direct reports fetched successfully"),
+    );
+});
+
+export const getHierarchyController = asyncHandler(async (req, res) => {
+  const employees = await getVisibleHierarchy({
+    userId: req.user.userId,
+    companyId: req.user.companyId,
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        employees,
+        "Employee hierarchy fetched successfully",
+      ),
+    );
 });
