@@ -35,6 +35,7 @@ import Access from "./components/Access";
 import Department from "./components/Department";
 import OrganizationUnit from "./components/OrganizationUnit";
 import WorkSchedule from "./components/WorkSchedule";
+import Hierarchy from "./components/Hierarchy";
 
 const navigation = [
   {
@@ -250,6 +251,9 @@ const Dashboard = () => {
 
       case "workSchedules":
         return <WorkSchedule />;
+
+      case "hierarchy":
+        return <Hierarchy />;
 
       case "overview":
       default:
