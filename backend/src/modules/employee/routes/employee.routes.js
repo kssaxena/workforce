@@ -13,6 +13,8 @@ import {
   createEmployeeController,
   getEmployeeController,
   getEmployeesController,
+  getDirectReportsController,
+  getHierarchyController,
 } from "../controllers/employee.controller.js";
 
 const router = Router();
@@ -27,6 +29,21 @@ router.post(
 );
 
 router.get("/", authorize(PERMISSIONS.EMPLOYEE_READ), getEmployeesController);
+
+/*
+ * Reporting hierarchy
+ */
+router.get(
+  "/hierarchy",
+  authorize(PERMISSIONS.EMPLOYEE_READ),
+  getHierarchyController,
+);
+
+router.get(
+  "/:employeeId/direct-reports",
+  authorize(PERMISSIONS.EMPLOYEE_READ),
+  getDirectReportsController,
+);
 
 router.get(
   "/:employeeId",
