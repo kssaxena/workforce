@@ -63,3 +63,7 @@ export const createEmployeeSchema = Joi.object({
     longitude: Joi.number().min(-180).max(180).allow(null),
   }),
 });
+
+export const updateEmployeeReportingSchema = Joi.object({
+  reportsTo: Joi.string().hex().length(24).allow(null),
+});
