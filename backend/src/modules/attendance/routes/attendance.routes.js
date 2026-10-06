@@ -10,6 +10,7 @@ import validate from "../../../core/middleware/validate.js";
 import {
   checkInSchema,
   checkOutSchema,
+  regularizeAttendanceSchema,
 } from "../validators/attendance.validator.js";
 
 import {
@@ -18,7 +19,13 @@ import {
   getMyAttendanceController,
   getCompanyAttendanceController,
   getAttendanceSummaryController,
+  regularizeAttendanceController,
+  createAttendanceRegularizationController,
+  getMyAttendanceRegularizationController,
+  getCompanyAttendanceRegularizationController,
 } from "../controllers/attendance.controller.js";
+
+import { createAttendanceRegularizationSchema } from "../validators/attendance.validator.js";
 
 const router = Router();
 
@@ -54,6 +61,32 @@ router.get(
   "/company",
   authorize(PERMISSIONS.ATTENDANCE_READ),
   getCompanyAttendanceController,
+);
+
+router.patch(
+  "/regularize",
+  authorize(PERMISSIONS.ATTENDANCE_UPDATE),
+  validate(regularizeAttendanceSchema),
+  regularizeAttendanceController,
+);
+
+router.post(
+  "/regularization-requests",
+  authorize(PERMISSIONS.ATTENDANCE_CREATE),
+  validate(createAttendanceRegularizationSchema),
+  createAttendanceRegularizationController,
+);
+
+router.get(
+  "/regularization-requests/my",
+  authorize(PERMISSIONS.ATTENDANCE_READ),
+  getMyAttendanceRegularizationController,
+);
+
+router.get(
+  "/regularization-requests",
+  authorize(PERMISSIONS.ATTENDANCE_APPROVE),
+  getCompanyAttendanceRegularizationController,
 );
 
 export default router;

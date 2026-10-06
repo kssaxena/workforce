@@ -13,6 +13,14 @@ import {
   getAttendanceSummary,
 } from "../services/attendanceQuery.service.js";
 
+import { regularizeAttendance } from "../services/attendanceRegularization.service.js";
+
+import {
+  createAttendanceRegularizationRequest,
+  getMyAttendanceRegularizationRequests,
+  getCompanyAttendanceRegularizationRequests,
+} from "../services/attendanceRegularizationRequest.service.js";
+
 export const checkInController = asyncHandler(async (req, res) => {
   const attendance = await checkIn({
     userId: req.user.userId,
@@ -132,3 +140,93 @@ export const getAttendanceSummaryController = asyncHandler(async (req, res) => {
       new ApiResponse(200, summary, "Attendance summary fetched successfully"),
     );
 });
+
+export const regularizeAttendanceController = asyncHandler(async (req, res) => {
+  const attendance = await regularizeAttendance({
+    companyId: req.user.companyId,
+    updatedBy: req.user.userId,
+
+    employeeId: req.body.employeeId,
+    date: req.body.date,
+    status: req.body.status,
+
+    checkIn: req.body.checkIn,
+    checkOut: req.body.checkOut,
+
+    remarks: req.body.remarks,
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, attendance, "Attendance regularized successfully"),
+    );
+});
+
+export const createAttendanceRegularizationController = asyncHandler(
+  async (req, res) => {
+    const request = await createAttendanceRegularizationRequest({
+      userId: req.user.userId,
+      companyId: req.user.companyId,
+
+      date: req.body.date,
+      requestedStatus: req.body.requestedStatus,
+
+      requestedCheckIn: req.body.requestedCheckIn,
+
+      requestedCheckOut: req.body.requestedCheckOut,
+
+      reason: req.body.reason,
+    });
+
+    return res
+      .status(201)
+      .json(
+        new ApiResponse(
+          201,
+          request,
+          "Attendance regularization request submitted successfully",
+        ),
+      );
+  },
+);
+
+export const getMyAttendanceRegularizationController = asyncHandler(
+  async (req, res) => {
+    const requests = await getMyAttendanceRegularizationRequests({
+      userId: req.user.userId,
+      companyId: req.user.companyId,
+      status: req.query.status,
+    });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          requests,
+          "Attendance regularization requests fetched successfully",
+        ),
+      );
+  },
+);
+
+export const getCompanyAttendanceRegularizationController = asyncHandler(
+  async (req, res) => {
+    const requests = await getCompanyAttendanceRegularizationRequests({
+      companyId: req.user.companyId,
+      status: req.query.status,
+      employeeId: req.query.employeeId,
+    });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          requests,
+          "Attendance regularization requests fetched successfully",
+        ),
+      );
+  },
+);
