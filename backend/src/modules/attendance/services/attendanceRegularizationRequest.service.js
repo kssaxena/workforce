@@ -7,6 +7,8 @@ import Company from "../../company/models/company.model.js";
 
 import ApiError from "../../../core/errors/ApiError.js";
 
+import { calculateWorkedMinutes } from "../../../core/utils/dateTime.js";
+
 const createBusinessDate = (date) => {
   const [year, month, day] = date.split("-").map(Number);
 
@@ -184,4 +186,209 @@ export const getCompanyAttendanceRegularizationRequests = async ({
       status: 1,
       createdAt: -1,
     });
+};
+
+export const reviewAttendanceRegularization = async ({
+  requestId,
+  companyId,
+  reviewerId,
+  decision,
+  reviewRemarks,
+}) => {
+  if (!mongoose.Types.ObjectId.isValid(requestId)) {
+    throw new ApiError(400, "Invalid regularization request ID");
+  }
+
+  const session = await mongoose.startSession();
+
+  try {
+    let result;
+
+    await session.withTransaction(async () => {
+      /*
+       * Lock the logical workflow by reading the request
+       * inside the transaction.
+       */
+      const request = await AttendanceRegularization.findOne({
+        _id: requestId,
+        companyId,
+      }).session(session);
+
+      if (!request) {
+        throw new ApiError(404, "Regularization request not found");
+      }
+
+      if (request.status !== "PENDING") {
+        throw new ApiError(
+          409,
+          `This request has already been ${request.status.toLowerCase()}`,
+        );
+      }
+
+      /*
+       * REJECTION
+       *
+       * Nothing should be changed in Attendance.
+       */
+      if (decision === "REJECTED") {
+        request.status = "REJECTED";
+        request.reviewedBy = reviewerId;
+        request.reviewedAt = new Date();
+        request.reviewRemarks = reviewRemarks || "";
+        request.updatedBy = reviewerId;
+
+        await request.save({ session });
+
+        result = request;
+        return;
+      }
+
+      /*
+       * APPROVAL
+       */
+
+      const employee = await Employee.findOne({
+        _id: request.employeeId,
+        companyId,
+        isActive: true,
+      })
+        .select("_id")
+        .session(session);
+
+      if (!employee) {
+        throw new ApiError(404, "Employee no longer exists or is inactive");
+      }
+
+      const checkIn = request.requestedCheckIn || null;
+
+      const checkOut = request.requestedCheckOut || null;
+
+      if (checkIn && checkOut && new Date(checkOut) <= new Date(checkIn)) {
+        throw new ApiError(
+          400,
+          "Requested check-out must be later than check-in",
+        );
+      }
+
+      const isWorkingStatus =
+        request.requestedStatus === "PRESENT" ||
+        request.requestedStatus === "HALF_DAY";
+
+      const finalCheckIn = isWorkingStatus ? checkIn : null;
+
+      const finalCheckOut = isWorkingStatus ? checkOut : null;
+
+      const totalWorkedMinutes = calculateWorkedMinutes({
+        checkIn: finalCheckIn,
+        checkOut: finalCheckOut,
+      });
+
+      /*
+       * If an attendance record already exists, update it.
+       *
+       * Otherwise create one.
+       */
+      let attendance;
+
+      if (request.attendanceId) {
+        attendance = await Attendance.findOne({
+          _id: request.attendanceId,
+          companyId,
+          employeeId: request.employeeId,
+          date: request.date,
+        }).session(session);
+
+        /*
+         * The request references an attendance record that
+         * no longer exists. We create a replacement rather
+         * than leaving the request approved without attendance.
+         */
+        if (!attendance) {
+          attendance = new Attendance({
+            companyId,
+            employeeId: request.employeeId,
+            date: request.date,
+            createdBy: reviewerId,
+          });
+        }
+      } else {
+        attendance = await Attendance.findOne({
+          companyId,
+          employeeId: request.employeeId,
+          date: request.date,
+        }).session(session);
+
+        if (!attendance) {
+          attendance = new Attendance({
+            companyId,
+            employeeId: request.employeeId,
+            date: request.date,
+            createdBy: reviewerId,
+          });
+        }
+      }
+
+      /*
+       * Apply the approved attendance.
+       */
+      attendance.status = request.requestedStatus;
+
+      attendance.checkIn = {
+        timestamp: finalCheckIn,
+        location: undefined,
+        verification: finalCheckIn ? "MANUAL" : undefined,
+        distanceFromOffice: undefined,
+      };
+
+      attendance.checkOut = {
+        timestamp: finalCheckOut,
+        location: undefined,
+        verification: finalCheckOut ? "MANUAL" : undefined,
+        distanceFromOffice: undefined,
+      };
+
+      attendance.totalWorkedMinutes = isWorkingStatus ? totalWorkedMinutes : 0;
+
+      attendance.source = "ADMIN";
+
+      /*
+       * Manual approval does not fabricate schedule
+       * metrics.
+       */
+      attendance.isLate = false;
+      attendance.lateMinutes = 0;
+
+      attendance.isEarlyCheckout = false;
+      attendance.earlyCheckoutMinutes = 0;
+
+      attendance.overtimeMinutes = 0;
+
+      attendance.remarks = request.reason || "";
+
+      attendance.updatedBy = reviewerId;
+
+      await attendance.save({ session });
+
+      /*
+       * Link the request to the final attendance record.
+       */
+      request.attendanceId = attendance._id;
+      request.status = "APPROVED";
+      request.reviewedBy = reviewerId;
+      request.reviewedAt = new Date();
+      request.reviewRemarks = reviewRemarks || "";
+      request.updatedBy = reviewerId;
+
+      await request.save({ session });
+
+      result = {
+        request,
+        attendance,
+      };
+    });
+
+    return result;
+  } finally {
+    await session.endSession();
+  }
 };
