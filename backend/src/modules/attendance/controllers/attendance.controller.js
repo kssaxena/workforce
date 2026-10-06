@@ -9,6 +9,8 @@ import { checkOut } from "../services/attendance.service.js";
 import {
   getEmployeeAttendance,
   getTodayAttendance,
+  getCompanyAttendance,
+  getAttendanceSummary,
 } from "../services/attendanceQuery.service.js";
 
 export const checkInController = asyncHandler(async (req, res) => {
@@ -31,8 +33,7 @@ export const checkInController = asyncHandler(async (req, res) => {
 export const checkOutController = asyncHandler(async (req, res) => {
   const attendance = await checkOut({
     userId: req.user.userId,
-
-
+    companyId: req.user.companyId,
     latitude: req.body.latitude,
     longitude: req.body.longitude,
     accuracy: req.body.accuracy,
@@ -87,3 +88,47 @@ export const getMyAttendanceController = asyncHandler(async (req, res) => {
     );
 });
 
+export const getCompanyAttendanceController = asyncHandler(async (req, res) => {
+  const attendance = await getCompanyAttendance({
+    companyId: req.user.companyId,
+
+    startDate: req.query.startDate,
+    endDate: req.query.endDate,
+
+    employeeId: req.query.employeeId,
+    departmentId: req.query.departmentId,
+    organizationUnitId: req.query.organizationUnitId,
+
+    status: req.query.status,
+    search: req.query.search,
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        attendance,
+        "Company attendance fetched successfully",
+      ),
+    );
+});
+
+export const getAttendanceSummaryController = asyncHandler(async (req, res) => {
+  const summary = await getAttendanceSummary({
+    companyId: req.user.companyId,
+
+    startDate: req.query.startDate,
+    endDate: req.query.endDate,
+
+    employeeId: req.query.employeeId,
+    departmentId: req.query.departmentId,
+    organizationUnitId: req.query.organizationUnitId,
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, summary, "Attendance summary fetched successfully"),
+    );
+});

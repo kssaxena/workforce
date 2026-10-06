@@ -16,6 +16,8 @@ import {
   checkInController,
   checkOutController,
   getMyAttendanceController,
+  getCompanyAttendanceController,
+  getAttendanceSummaryController,
 } from "../controllers/attendance.controller.js";
 
 const router = Router();
@@ -40,6 +42,18 @@ router.get(
   "/my",
   authorize(PERMISSIONS.ATTENDANCE_READ),
   getMyAttendanceController,
+);
+
+router.get(
+  "/summary",
+  authorize(PERMISSIONS.ATTENDANCE_READ),
+  getAttendanceSummaryController,
+);
+
+router.get(
+  "/company",
+  authorize(PERMISSIONS.ATTENDANCE_READ),
+  getCompanyAttendanceController,
 );
 
 export default router;
