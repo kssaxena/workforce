@@ -19,6 +19,7 @@ import {
   createAttendanceRegularizationRequest,
   getMyAttendanceRegularizationRequests,
   getCompanyAttendanceRegularizationRequests,
+  reviewAttendanceRegularization,
 } from "../services/attendanceRegularizationRequest.service.js";
 
 export const checkInController = asyncHandler(async (req, res) => {
@@ -228,5 +229,26 @@ export const getCompanyAttendanceRegularizationController = asyncHandler(
           "Attendance regularization requests fetched successfully",
         ),
       );
+  },
+);
+
+export const reviewAttendanceRegularizationController = asyncHandler(
+  async (req, res) => {
+    const result = await reviewAttendanceRegularization({
+      requestId: req.params.requestId,
+      companyId: req.user.companyId,
+      reviewerId: req.user.userId,
+
+      decision: req.body.decision,
+
+      reviewRemarks: req.body.reviewRemarks,
+    });
+
+    const message =
+      req.body.decision === "APPROVED"
+        ? "Attendance regularization approved successfully"
+        : "Attendance regularization rejected successfully";
+
+    return res.status(200).json(new ApiResponse(200, result, message));
   },
 );

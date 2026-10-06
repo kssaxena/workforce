@@ -11,6 +11,7 @@ import {
   checkInSchema,
   checkOutSchema,
   regularizeAttendanceSchema,
+  reviewAttendanceRegularizationSchema,
 } from "../validators/attendance.validator.js";
 
 import {
@@ -23,6 +24,7 @@ import {
   createAttendanceRegularizationController,
   getMyAttendanceRegularizationController,
   getCompanyAttendanceRegularizationController,
+  reviewAttendanceRegularizationController,
 } from "../controllers/attendance.controller.js";
 
 import { createAttendanceRegularizationSchema } from "../validators/attendance.validator.js";
@@ -87,6 +89,13 @@ router.get(
   "/regularization-requests",
   authorize(PERMISSIONS.ATTENDANCE_APPROVE),
   getCompanyAttendanceRegularizationController,
+);
+
+router.patch(
+  "/regularization-requests/:requestId/review",
+  authorize(PERMISSIONS.ATTENDANCE_APPROVE),
+  validate(reviewAttendanceRegularizationSchema),
+  reviewAttendanceRegularizationController,
 );
 
 export default router;
