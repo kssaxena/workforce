@@ -1,76 +1,41 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Activity,
   CalendarDays,
   CheckCircle2,
   Clock3,
-  Coffee,
-  Crosshair,
-  LogIn,
-  LogOut,
+  Download,
+  Filter,
+  Loader2,
   MapPin,
   RefreshCw,
-  Timer,
-  AlertCircle,
-  History,
+  Search,
+  UserCheck,
+  UserX,
+  X,
 } from "lucide-react";
 
 import {
-  checkIn,
-  checkOut,
-  getMyAttendance,
+  getAttendanceSummary,
+  getCompanyAttendance,
 } from "../../../services/attendance";
 
-const formatTime = (date) => {
-  if (!date) return "--";
+import {
+  getDepartments,
+  getOrganizationUnits,
+} from "../../../services/organization";
 
-  return new Intl.DateTimeFormat("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  }).format(new Date(date));
-};
+const STATUS_OPTIONS = [
+  { value: "", label: "All Statuses" },
+  { value: "PRESENT", label: "Present" },
+  { value: "ABSENT", label: "Absent" },
+  { value: "HALF_DAY", label: "Half Day" },
+  { value: "ON_LEAVE", label: "On Leave" },
+  { value: "HOLIDAY", label: "Holiday" },
+  { value: "WEEK_OFF", label: "Week Off" },
+];
 
-const formatDate = (date) => {
-  if (!date) return "--";
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(date));
-};
-
-const formatMinutes = (minutes = 0) => {
-  if (!minutes) return "0m";
-
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-
-  if (hours === 0) {
-    return `${mins}m`;
-  }
-
-  if (mins === 0) {
-    return `${hours}h`;
-  }
-
-  return `${hours}h ${mins}m`;
-};
-
-const getTodayString = () => {
-  const today = new Date();
-
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
-
-const getDateBefore = (days) => {
-  const date = new Date();
-  date.setDate(date.getDate() - days);
-
+const getDateString = (date = new Date()) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -78,29 +43,131 @@ const getDateBefore = (days) => {
   return `${year}-${month}-${day}`;
 };
 
+const formatTime = (timestamp) => {
+  if (!timestamp) return "—";
+
+  return new Date(timestamp).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const formatDate = (date) => {
+  if (!date) return "—";
+
+  return new Date(date).toLocaleDateString([], {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const formatMinutes = (minutes = 0) => {
+  if (!minutes) return "0h 0m";
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  return `${hours}h ${remainingMinutes}m`;
+};
+
+const getEmployeeName = (employee) => {
+  if (!employee) return "Unknown Employee";
+
+  return [employee.firstName, employee.lastName].filter(Boolean).join(" ");
+};
+
+const getInitials = (employee) => {
+  if (!employee) return "?";
+
+  const first = employee.firstName?.charAt(0) || "";
+  const last = employee.lastName?.charAt(0) || "";
+
+  return `${first}${last}`.toUpperCase() || "?";
+};
+
+const getStatusConfig = (status) => {
+  switch (status) {
+    case "PRESENT":
+      return {
+        label: "Present",
+        className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      };
+
+    case "ABSENT":
+      return {
+        label: "Absent",
+        className: "bg-red-50 text-red-700 border-red-200",
+      };
+
+    case "HALF_DAY":
+      return {
+        label: "Half Day",
+        className: "bg-amber-50 text-amber-700 border-amber-200",
+      };
+
+    case "ON_LEAVE":
+      return {
+        label: "On Leave",
+        className: "bg-blue-50 text-blue-700 border-blue-200",
+      };
+
+    case "HOLIDAY":
+      return {
+        label: "Holiday",
+        className: "bg-purple-50 text-purple-700 border-purple-200",
+      };
+
+    case "WEEK_OFF":
+      return {
+        label: "Week Off",
+        className: "bg-slate-100 text-slate-600 border-slate-200",
+      };
+
+    default:
+      return {
+        label: status || "Unknown",
+        className: "bg-slate-100 text-slate-600 border-slate-200",
+      };
+  }
+};
+
 const Attendance = () => {
-  const today = getTodayString();
+  const today = getDateString();
 
-  const [attendance, setAttendance] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [organizationUnits, setOrganizationUnits] = useState([]);
 
-  const [location, setLocation] = useState(null);
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [locationError, setLocationError] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
+  const [organizationUnitId, setOrganizationUnitId] = useState("");
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
-  const [startDate, setStartDate] = useState(getDateBefore(6));
-
+  const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
 
+  const [status, setStatus] = useState("");
+  const [search, setSearch] = useState("");
+
+  const [attendance, setAttendance] = useState([]);
+  const [summary, setSummary] = useState({
+    total: 0,
+    present: 0,
+    absent: 0,
+    halfDay: 0,
+    onLeave: 0,
+    holiday: 0,
+    weekOff: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
+
+  const [selectedAttendance, setSelectedAttendance] = useState(null);
+
   const fetchAttendance = useCallback(
-    async ({ refresh = false } = {}) => {
+    async ({ silent = false } = {}) => {
       try {
-        if (refresh) {
+        if (silent) {
           setRefreshing(true);
         } else {
           setLoading(true);
@@ -108,629 +175,1000 @@ const Attendance = () => {
 
         setError("");
 
-        const response = await getMyAttendance({
+        const params = {
           startDate,
           endDate,
-        });
+        };
 
-        setAttendance(response?.data?.data || []);
+        if (status) {
+          params.status = status;
+        }
+
+        if (departmentId) {
+          params.departmentId = departmentId;
+        }
+
+        if (organizationUnitId) {
+          params.organizationUnitId = organizationUnitId;
+        }
+
+        if (search.trim()) {
+          params.search = search.trim();
+        }
+
+        const [summaryResponse, attendanceResponse] = await Promise.all([
+          getAttendanceSummary({
+            startDate,
+            endDate,
+            departmentId: departmentId || undefined,
+            organizationUnitId: organizationUnitId || undefined,
+          }),
+
+          getCompanyAttendance(params),
+        ]);
+
+        setSummary(
+          summaryResponse?.data?.data || {
+            total: 0,
+            present: 0,
+            absent: 0,
+            halfDay: 0,
+            onLeave: 0,
+            holiday: 0,
+            weekOff: 0,
+          },
+        );
+
+        setAttendance(attendanceResponse?.data?.data || []);
       } catch (err) {
-        console.error("Failed to fetch attendance:", err);
+        console.error("Attendance dashboard error:", err);
 
-        setError(err?.response?.data?.message || "Unable to load attendance.");
+        setError(
+          err?.response?.data?.message || "Unable to load attendance data.",
+        );
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [startDate, endDate],
+    [startDate, endDate, status, departmentId, organizationUnitId, search],
   );
 
   useEffect(() => {
     fetchAttendance();
   }, [fetchAttendance]);
 
-  const todayAttendance = useMemo(() => {
-    return attendance.find((item) => {
-      if (!item?.date) return false;
+  useEffect(() => {
+    const loadOrganizationFilters = async () => {
+      try {
+        const [departmentResponse, organizationUnitResponse] =
+          await Promise.all([getDepartments(), getOrganizationUnits()]);
 
-      const date = new Date(item.date);
+        setDepartments(departmentResponse?.data?.data || []);
 
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-
-      return `${year}-${month}-${day}` === today;
-    });
-  }, [attendance, today]);
-
-  const isCheckedIn =
-    Boolean(todayAttendance?.checkIn?.timestamp) &&
-    !todayAttendance?.checkOut?.timestamp;
-
-  const isCheckedOut = Boolean(todayAttendance?.checkOut?.timestamp);
-
-  const getCurrentLocation = () => {
-    setLocationLoading(true);
-    setLocationError("");
-
-    if (!navigator.geolocation) {
-      setLocationLoading(false);
-      setLocationError("Geolocation is not supported by this browser.");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-        });
-
-        setLocationLoading(false);
-      },
-      (geoError) => {
-        setLocationLoading(false);
-
-        let message = "Unable to retrieve your location.";
-
-        if (geoError.code === 1) {
-          message =
-            "Location permission was denied. Please allow location access in your browser.";
-        }
-
-        if (geoError.code === 2) {
-          message = "Your location could not be determined. Please try again.";
-        }
-
-        if (geoError.code === 3) {
-          message = "Location request timed out. Please try again.";
-        }
-
-        setLocationError(message);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
-      },
-    );
-  };
-
-  const performAttendanceAction = async (action) => {
-    try {
-      setActionLoading(true);
-      setError("");
-      setSuccess("");
-
-      let currentLocation = location;
-
-      if (!currentLocation) {
-        if (!navigator.geolocation) {
-          throw new Error("Geolocation is not supported by this browser.");
-        }
-
-        currentLocation = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              resolve({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-                accuracy: position.coords.accuracy,
-              });
-            },
-            (geoError) => {
-              if (geoError.code === 1) {
-                reject(
-                  new Error(
-                    "Location permission was denied. Please allow location access.",
-                  ),
-                );
-              } else if (geoError.code === 2) {
-                reject(new Error("Your location could not be determined."));
-              } else if (geoError.code === 3) {
-                reject(new Error("Location request timed out."));
-              } else {
-                reject(new Error("Unable to retrieve your location."));
-              }
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: 15000,
-              maximumAge: 0,
-            },
-          );
-        });
-
-        setLocation(currentLocation);
+        setOrganizationUnits(organizationUnitResponse?.data?.data || []);
+      } catch (err) {
+        console.error("Failed to load organization filters:", err);
       }
+    };
 
-      const payload = {
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
-        accuracy: currentLocation.accuracy,
-        source: "WEB",
-      };
+    loadOrganizationFilters();
+  }, []);
 
-      if (action === "CHECK_IN") {
-        const response = await checkIn(payload);
-
-        setSuccess(response?.data?.message || "Check-in successful.");
-      } else {
-        const response = await checkOut(payload);
-
-        setSuccess(response?.data?.message || "Check-out successful.");
-      }
-
-      await fetchAttendance({ refresh: true });
-    } catch (err) {
-      console.error("Attendance action failed:", err);
-
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Attendance action failed.",
-      );
-    } finally {
-      setActionLoading(false);
-    }
+  const handleRefresh = () => {
+    fetchAttendance({ silent: true });
   };
 
-  const handleCheckIn = () => {
-    performAttendanceAction("CHECK_IN");
+  const clearFilters = () => {
+    setStartDate(today);
+    setEndDate(today);
+    setStatus("");
+    setDepartmentId("");
+    setOrganizationUnitId("");
+    setSearch("");
   };
 
-  const handleCheckOut = () => {
-    performAttendanceAction("CHECK_OUT");
-  };
-
-  const handleDateRangeChange = () => {
-    fetchAttendance();
-  };
-
-  if (loading) {
+  const hasFilters = useMemo(() => {
     return (
-      <div className="space-y-6">
-        <div>
-          <div className="h-8 w-48 animate-pulse rounded-lg bg-gray-200" />
-          <div className="mt-2 h-4 w-80 animate-pulse rounded bg-gray-100" />
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-3">
-          {[1, 2, 3].map((item) => (
-            <div
-              key={item}
-              className="h-28 animate-pulse rounded-2xl bg-gray-100"
-            />
-          ))}
-        </div>
-
-        <div className="h-80 animate-pulse rounded-2xl bg-gray-100" />
-      </div>
+      startDate !== today ||
+      endDate !== today ||
+      Boolean(status) ||
+      Boolean(departmentId) ||
+      Boolean(organizationUnitId) ||
+      Boolean(search.trim())
     );
-  }
+  }, [
+    startDate,
+    endDate,
+    status,
+    departmentId,
+    organizationUnitId,
+    search,
+    today,
+  ]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-        <div>
-          <p className="text-sm font-medium text-gray-500">Workforce</p>
+    <div className="w-full space-y-6">
+      {/* ------------------------------------------------------------------ */}
+      {/* Header                                                             */}
+      {/* ------------------------------------------------------------------ */}
 
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-gray-900">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <div className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-500">
+            <Activity size={16} />
+            Workforce Management
+          </div>
+
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
             Attendance
           </h1>
 
-          <p className="mt-2 text-sm text-gray-500">
-            Track your working hours and daily attendance.
+          <p className="mt-1 text-sm text-slate-500">
+            Monitor and manage employee attendance across your organization.
           </p>
         </div>
 
         <button
           type="button"
-          onClick={() => fetchAttendance({ refresh: true })}
+          onClick={handleRefresh}
           disabled={refreshing}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <RefreshCw
-            className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-          />
-          Refresh
+          <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+
+          {refreshing ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
-      {/* Alerts */}
+      {/* ------------------------------------------------------------------ */}
+      {/* Error                                                              */}
+      {/* ------------------------------------------------------------------ */}
+
       {error && (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <span>{error}</span>
-        </div>
-      )}
-
-      {success && (
-        <div className="flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{success}</span>
-        </div>
-      )}
-
-      {/* Main attendance card */}
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
-            <div>
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
-                <CalendarDays className="h-4 w-4" />
-                {new Intl.DateTimeFormat("en-IN", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                }).format(new Date())}
-              </div>
-
-              <h2 className="mt-4 text-2xl font-bold text-gray-900">
-                {isCheckedIn
-                  ? "You are currently working"
-                  : isCheckedOut
-                    ? "Attendance completed"
-                    : "Ready to start your day?"}
-              </h2>
-
-              <p className="mt-2 text-sm text-gray-500">
-                {isCheckedIn
-                  ? "Your attendance session is active."
-                  : isCheckedOut
-                    ? "You have successfully completed today's attendance."
-                    : "Check in to start recording your working hours."}
-              </p>
-            </div>
-
-            <div
-              className={`flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-2xl ${
-                isCheckedIn
-                  ? "bg-green-50 text-green-700"
-                  : isCheckedOut
-                    ? "bg-gray-100 text-gray-600"
-                    : "bg-gray-900 text-white"
-              }`}
-            >
-              <Clock3 className="h-6 w-6" />
-
-              <span className="mt-1 text-xs font-medium">
-                {isCheckedIn ? "WORKING" : isCheckedOut ? "DONE" : "READY"}
-              </span>
-            </div>
-          </div>
-
-          {/* Today's timings */}
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl bg-gray-50 p-4">
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <LogIn className="h-4 w-4" />
-                Check In
-              </div>
-
-              <p className="mt-2 text-lg font-semibold text-gray-900">
-                {formatTime(todayAttendance?.checkIn?.timestamp)}
-              </p>
-            </div>
-
-            <div className="rounded-xl bg-gray-50 p-4">
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <LogOut className="h-4 w-4" />
-                Check Out
-              </div>
-
-              <p className="mt-2 text-lg font-semibold text-gray-900">
-                {formatTime(todayAttendance?.checkOut?.timestamp)}
-              </p>
-            </div>
-
-            <div className="rounded-xl bg-gray-50 p-4">
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <Timer className="h-4 w-4" />
-                Worked
-              </div>
-
-              <p className="mt-2 text-lg font-semibold text-gray-900">
-                {formatMinutes(todayAttendance?.totalWorkedMinutes)}
-              </p>
-            </div>
-          </div>
-
-          {/* Action */}
-          <div className="mt-6">
-            {!todayAttendance ? (
-              <button
-                type="button"
-                onClick={handleCheckIn}
-                disabled={actionLoading}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <LogIn className="h-5 w-5" />
-
-                {actionLoading ? "Checking in..." : "Check In"}
-              </button>
-            ) : isCheckedIn ? (
-              <button
-                type="button"
-                onClick={handleCheckOut}
-                disabled={actionLoading}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <LogOut className="h-5 w-5" />
-
-                {actionLoading ? "Checking out..." : "Check Out"}
-              </button>
-            ) : (
-              <div className="flex items-center justify-center gap-2 rounded-xl bg-green-50 px-5 py-3.5 text-sm font-medium text-green-700">
-                <CheckCircle2 className="h-5 w-5" />
-                Today's attendance is complete
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Location card */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100">
-              <MapPin className="h-5 w-5 text-gray-600" />
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-900">
-                Attendance Location
-              </h3>
-
-              <p className="text-xs text-gray-500">
-                Required for attendance verification
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6 rounded-xl bg-gray-50 p-4">
-            {location ? (
-              <>
-                <div className="flex items-center gap-2 text-sm font-medium text-green-700">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Location detected
-                </div>
-
-                <div className="mt-3 space-y-1 text-xs text-gray-500">
-                  <p>Latitude: {location.latitude.toFixed(6)}</p>
-
-                  <p>Longitude: {location.longitude.toFixed(6)}</p>
-
-                  {location.accuracy && (
-                    <p>Accuracy: {Math.round(location.accuracy)}m</p>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <Crosshair className="h-4 w-4" />
-                  Location not detected
-                </div>
-
-                <p className="mt-2 text-xs leading-5 text-gray-500">
-                  Your location is used to verify attendance when GPS attendance
-                  is enabled.
-                </p>
-              </>
-            )}
-          </div>
 
           <button
             type="button"
-            onClick={getCurrentLocation}
-            disabled={locationLoading}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
+            onClick={() => setError("")}
+            className="rounded-lg p-1 transition hover:bg-red-100"
           >
-            <Crosshair
-              className={`h-4 w-4 ${locationLoading ? "animate-spin" : ""}`}
-            />
-
-            {locationLoading ? "Detecting..." : "Detect My Location"}
+            <X size={16} />
           </button>
-
-          {locationError && (
-            <p className="mt-3 text-xs leading-5 text-red-600">
-              {locationError}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Today's metrics */}
-      {todayAttendance && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">Late</p>
-
-            <p className="mt-2 text-2xl font-bold text-gray-900">
-              {formatMinutes(todayAttendance.lateMinutes)}
-            </p>
-
-            <p className="mt-1 text-xs text-gray-400">
-              {todayAttendance.isLate ? "Late arrival" : "On time"}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">Early Checkout</p>
-
-            <p className="mt-2 text-2xl font-bold text-gray-900">
-              {formatMinutes(todayAttendance.earlyCheckoutMinutes)}
-            </p>
-
-            <p className="mt-1 text-xs text-gray-400">
-              {todayAttendance.isEarlyCheckout
-                ? "Left early"
-                : "No early checkout"}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">Overtime</p>
-
-            <p className="mt-2 text-2xl font-bold text-gray-900">
-              {formatMinutes(todayAttendance.overtimeMinutes)}
-            </p>
-
-            <p className="mt-1 text-xs text-gray-400">
-              Additional working time
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">Status</p>
-
-            <p className="mt-2 text-2xl font-bold text-gray-900">
-              {todayAttendance.status || "--"}
-            </p>
-
-            <p className="mt-1 text-xs text-gray-400">
-              Today's attendance status
-            </p>
-          </div>
         </div>
       )}
 
-      {/* History */}
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="flex flex-col justify-between gap-4 border-b border-gray-100 p-5 lg:flex-row lg:items-center">
-          <div>
-            <div className="flex items-center gap-2">
-              <History className="h-5 w-5 text-gray-500" />
+      {/* ------------------------------------------------------------------ */}
+      {/* Summary Cards                                                      */}
+      {/* ------------------------------------------------------------------ */}
 
-              <h2 className="font-semibold text-gray-900">
-                Attendance History
-              </h2>
-            </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard
+          title="Present"
+          value={summary.present}
+          description="Employees present"
+          icon={UserCheck}
+          iconWrapper="bg-emerald-50 text-emerald-600"
+        />
 
-            <p className="mt-1 text-sm text-gray-500">
-              Review your attendance records.
-            </p>
+        <SummaryCard
+          title="Absent"
+          value={summary.absent}
+          description="Employees absent"
+          icon={UserX}
+          iconWrapper="bg-red-50 text-red-600"
+        />
+
+        <SummaryCard
+          title="Half Day"
+          value={summary.halfDay}
+          description="Partial attendance"
+          icon={Clock3}
+          iconWrapper="bg-amber-50 text-amber-600"
+        />
+
+        <SummaryCard
+          title="On Leave"
+          value={summary.onLeave}
+          description="Approved leave"
+          icon={CalendarDays}
+          iconWrapper="bg-blue-50 text-blue-600"
+        />
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Additional Summary                                                 */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+        <MiniSummary label="Total Records" value={summary.total} />
+
+        <MiniSummary label="Holidays" value={summary.holiday} />
+
+        <MiniSummary label="Week Off" value={summary.weekOff} />
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Filters                                                            */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Filter size={17} className="text-slate-500" />
+
+            <h2 className="text-sm font-semibold text-slate-900">
+              Attendance Filters
+            </h2>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="text-xs font-medium text-slate-500 transition hover:text-slate-900"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {/* Start Date */}
+
+          <FilterField label="From">
             <input
               type="date"
               value={startDate}
+              max={endDate}
               onChange={(event) => setStartDate(event.target.value)}
-              className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+              className="filter-input"
             />
+          </FilterField>
 
+          {/* End Date */}
+
+          <FilterField label="To">
             <input
               type="date"
               value={endDate}
+              min={startDate}
               onChange={(event) => setEndDate(event.target.value)}
-              className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+              className="filter-input"
             />
+          </FilterField>
 
-            <button
-              type="button"
-              onClick={handleDateRangeChange}
-              className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+          {/* Status */}
+
+          <FilterField label="Status">
+            <select
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+              className="filter-input"
             >
-              Apply
-            </button>
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </FilterField>
+
+          <FilterField label="Department">
+            <select
+              value={departmentId}
+              onChange={(event) => setDepartmentId(event.target.value)}
+              className="filter-input"
+            >
+              <option value="">All Departments</option>
+
+              {departments.map((department) => (
+                <option key={department._id} value={department._id}>
+                  {department.name}
+                </option>
+              ))}
+            </select>
+          </FilterField>
+
+          <FilterField label="Organization Unit">
+            <select
+              value={organizationUnitId}
+              onChange={(event) => setOrganizationUnitId(event.target.value)}
+              className="filter-input"
+            >
+              <option value="">All Organization Units</option>
+
+              {organizationUnits.map((unit) => (
+                <option key={unit._id} value={unit._id}>
+                  {unit.name}
+                </option>
+              ))}
+            </select>
+          </FilterField>
+
+          {/* Search */}
+
+          <FilterField label="Search Employee">
+            <div className="relative">
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+
+              <input
+                type="text"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Name, code or designation"
+                className="filter-input pl-9"
+              />
+            </div>
+          </FilterField>
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Attendance Table                                                   */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900">
+              Attendance Records
+            </h2>
+
+            <p className="mt-1 text-xs text-slate-500">
+              {attendance.length} record
+              {attendance.length === 1 ? "" : "s"} found
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <CalendarDays size={14} />
+
+            {formatDate(startDate)}
+
+            {startDate !== endDate && (
+              <>
+                <span>—</span>
+                {formatDate(endDate)}
+              </>
+            )}
           </div>
         </div>
 
-        {attendance.length === 0 ? (
-          <div className="flex min-h-48 flex-col items-center justify-center p-6 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100">
-              <CalendarDays className="h-5 w-5 text-gray-400" />
-            </div>
-
-            <p className="mt-3 text-sm font-medium text-gray-700">
-              No attendance records
-            </p>
-
-            <p className="mt-1 text-xs text-gray-500">
-              No attendance data was found for the selected period.
-            </p>
-          </div>
+        {loading ? (
+          <AttendanceTableSkeleton />
+        ) : attendance.length === 0 ? (
+          <EmptyState hasFilters={hasFilters} onClear={clearFilters} />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
+            <table className="w-full min-w-[1000px]">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/70 text-left text-xs font-medium uppercase tracking-wide text-gray-400">
-                  <th className="px-5 py-3">Date</th>
+                <tr className="border-b border-slate-200 bg-slate-50/70">
+                  <th className="table-heading">Employee</th>
 
-                  <th className="px-5 py-3">Check In</th>
+                  <th className="table-heading">Department</th>
 
-                  <th className="px-5 py-3">Check Out</th>
+                  <th className="table-heading">Date</th>
 
-                  <th className="px-5 py-3">Worked</th>
+                  <th className="table-heading">Status</th>
 
-                  <th className="px-5 py-3">Late</th>
+                  <th className="table-heading">Check In</th>
 
-                  <th className="px-5 py-3">Overtime</th>
+                  <th className="table-heading">Check Out</th>
 
-                  <th className="px-5 py-3">Status</th>
+                  <th className="table-heading">Worked</th>
+
+                  <th className="table-heading">Attendance</th>
                 </tr>
               </thead>
 
-              <tbody>
-                {attendance.map((item) => (
-                  <tr
-                    key={item._id}
-                    className="border-b border-gray-50 last:border-0"
-                  >
-                    <td className="px-5 py-4 text-sm font-medium text-gray-800">
-                      {formatDate(item.date)}
-                    </td>
-
-                    <td className="px-5 py-4 text-sm text-gray-600">
-                      {formatTime(item.checkIn?.timestamp)}
-                    </td>
-
-                    <td className="px-5 py-4 text-sm text-gray-600">
-                      {formatTime(item.checkOut?.timestamp)}
-                    </td>
-
-                    <td className="px-5 py-4 text-sm font-medium text-gray-800">
-                      {formatMinutes(item.totalWorkedMinutes)}
-                    </td>
-
-                    <td className="px-5 py-4 text-sm text-gray-600">
-                      {formatMinutes(item.lateMinutes)}
-                    </td>
-
-                    <td className="px-5 py-4 text-sm text-gray-600">
-                      {formatMinutes(item.overtimeMinutes)}
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                          item.status === "PRESENT"
-                            ? "bg-green-50 text-green-700"
-                            : item.status === "HALF_DAY"
-                              ? "bg-yellow-50 text-yellow-700"
-                              : item.status === "ON_LEAVE"
-                                ? "bg-blue-50 text-blue-700"
-                                : item.status === "HOLIDAY"
-                                  ? "bg-purple-50 text-purple-700"
-                                  : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {item.status || "--"}
-                      </span>
-                    </td>
-                  </tr>
+              <tbody className="divide-y divide-slate-100">
+                {attendance.map((record) => (
+                  <AttendanceRow
+                    key={record._id}
+                    record={record}
+                    onClick={() => setSelectedAttendance(record)}
+                  />
                 ))}
               </tbody>
             </table>
           </div>
         )}
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Attendance Detail Modal                                            */}
+      {/* ------------------------------------------------------------------ */}
+
+      {selectedAttendance && (
+        <AttendanceDetailModal
+          attendance={selectedAttendance}
+          onClose={() => setSelectedAttendance(null)}
+        />
+      )}
+
+      <style>{`
+        .filter-input {
+          width: 100%;
+          height: 40px;
+          border-radius: 0.75rem;
+          border: 1px solid rgb(226 232 240);
+          background: white;
+          padding: 0 0.75rem;
+          font-size: 0.875rem;
+          color: rgb(15 23 42);
+          outline: none;
+          transition: all 150ms ease;
+        }
+
+        .filter-input:focus {
+          border-color: rgb(148 163 184);
+          box-shadow: 0 0 0 3px rgb(241 245 249);
+        }
+
+        .table-heading {
+          padding: 0.75rem 1.25rem;
+          text-align: left;
+          font-size: 0.6875rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: rgb(100 116 139);
+        }
+      `}</style>
+    </div>
+  );
+};
+
+/* ========================================================================== */
+/* Summary Card                                                               */
+/* ========================================================================== */
+
+const SummaryCard = ({
+  title,
+  value,
+  description,
+  icon: Icon,
+  iconWrapper,
+}) => {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm font-medium text-slate-500">{title}</p>
+
+          <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
+            {value}
+          </p>
+
+          <p className="mt-1 text-xs text-slate-400">{description}</p>
+        </div>
+
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconWrapper}`}
+        >
+          <Icon size={19} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ========================================================================== */
+/* Mini Summary                                                               */
+/* ========================================================================== */
+
+const MiniSummary = ({ label, value }) => {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+      <p className="text-xs font-medium text-slate-500">{label}</p>
+
+      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
+    </div>
+  );
+};
+
+/* ========================================================================== */
+/* Filter Field                                                               */
+/* ========================================================================== */
+
+const FilterField = ({ label, children }) => {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-medium text-slate-600">
+        {label}
+      </span>
+
+      {children}
+    </label>
+  );
+};
+
+/* ========================================================================== */
+/* Attendance Row                                                             */
+/* ========================================================================== */
+
+const AttendanceRow = ({ record, onClick }) => {
+  const employee = record.employeeId;
+
+  const statusConfig = getStatusConfig(record.status);
+
+  const workedMinutes = record.totalWorkedMinutes || 0;
+
+  const hasLocation =
+    record.checkIn?.location?.latitude != null &&
+    record.checkIn?.location?.longitude != null;
+
+  return (
+    <tr
+      onClick={onClick}
+      className="cursor-pointer transition hover:bg-slate-50"
+    >
+      {/* Employee */}
+
+      <td className="px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+            {getInitials(employee)}
+          </div>
+
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-slate-900">
+              {getEmployeeName(employee)}
+            </p>
+
+            <p className="mt-0.5 truncate text-xs text-slate-500">
+              {employee?.employeeCode || "—"}
+              {employee?.designation ? ` · ${employee.designation}` : ""}
+            </p>
+          </div>
+        </div>
+      </td>
+
+      {/* Department */}
+
+      <td className="px-5 py-4">
+        <p className="text-sm text-slate-700">
+          {employee?.departmentId?.name || "—"}
+        </p>
+
+        {employee?.departmentId?.code && (
+          <p className="mt-0.5 text-xs text-slate-400">
+            {employee.departmentId.code}
+          </p>
+        )}
+      </td>
+
+      {/* Date */}
+
+      <td className="px-5 py-4 text-sm text-slate-600">
+        {formatDate(record.date)}
+      </td>
+
+      {/* Status */}
+
+      <td className="px-5 py-4">
+        <span
+          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${statusConfig.className}`}
+        >
+          {statusConfig.label}
+        </span>
+      </td>
+
+      {/* Check In */}
+
+      <td className="px-5 py-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-slate-700">
+            {formatTime(record.checkIn?.timestamp)}
+          </span>
+
+          {record.isLate && (
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+              Late
+            </span>
+          )}
+        </div>
+      </td>
+
+      {/* Check Out */}
+
+      <td className="px-5 py-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-slate-700">
+            {formatTime(record.checkOut?.timestamp)}
+          </span>
+
+          {record.isEarlyCheckout && (
+            <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-medium text-orange-700">
+              Early
+            </span>
+          )}
+        </div>
+      </td>
+
+      {/* Worked */}
+
+      <td className="px-5 py-4">
+        <p className="text-sm font-medium text-slate-700">
+          {formatMinutes(workedMinutes)}
+        </p>
+
+        {record.overtimeMinutes > 0 && (
+          <p className="mt-0.5 text-xs text-emerald-600">
+            +{formatMinutes(record.overtimeMinutes)} OT
+          </p>
+        )}
+      </td>
+
+      {/* Attendance */}
+
+      <td className="px-5 py-4">
+        <div className="flex items-center gap-2">
+          {hasLocation ? (
+            <span
+              title="GPS location captured"
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600"
+            >
+              <MapPin size={14} />
+            </span>
+          ) : (
+            <span
+              title="No GPS location"
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-400"
+            >
+              <MapPin size={14} />
+            </span>
+          )}
+
+          <span className="text-xs text-slate-400">View</span>
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+/* ========================================================================== */
+/* Attendance Detail Modal                                                    */
+/* ========================================================================== */
+
+const AttendanceDetailModal = ({ attendance, onClose }) => {
+  const employee = attendance.employeeId;
+  const statusConfig = getStatusConfig(attendance.status);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        {/* Header */}
+
+        <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
+              {getInitials(employee)}
+            </div>
+
+            <div>
+              <h3 className="text-base font-semibold text-slate-900">
+                {getEmployeeName(employee)}
+              </h3>
+
+              <p className="mt-0.5 text-xs text-slate-500">
+                {employee?.employeeCode || "—"}
+                {employee?.designation ? ` · ${employee.designation}` : ""}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Content */}
+
+        <div className="space-y-6 p-6">
+          {/* Status */}
+
+          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div>
+              <p className="text-xs font-medium text-slate-500">
+                Attendance Status
+              </p>
+
+              <p className="mt-1 text-sm font-medium text-slate-900">
+                {formatDate(attendance.date)}
+              </p>
+            </div>
+
+            <span
+              className={`rounded-full border px-3 py-1.5 text-xs font-medium ${statusConfig.className}`}
+            >
+              {statusConfig.label}
+            </span>
+          </div>
+
+          {/* Timing */}
+
+          <div>
+            <h4 className="mb-3 text-sm font-semibold text-slate-900">
+              Working Hours
+            </h4>
+
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <DetailItem
+                label="Check In"
+                value={formatTime(attendance.checkIn?.timestamp)}
+              />
+
+              <DetailItem
+                label="Check Out"
+                value={formatTime(attendance.checkOut?.timestamp)}
+              />
+
+              <DetailItem
+                label="Worked"
+                value={formatMinutes(attendance.totalWorkedMinutes)}
+              />
+
+              <DetailItem
+                label="Scheduled"
+                value={formatMinutes(attendance.scheduledWorkingMinutes)}
+              />
+            </div>
+          </div>
+
+          {/* Performance */}
+
+          <div>
+            <h4 className="mb-3 text-sm font-semibold text-slate-900">
+              Attendance Metrics
+            </h4>
+
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <DetailItem
+                label="Late"
+                value={
+                  attendance.isLate
+                    ? `${attendance.lateMinutes || 0} min`
+                    : "No"
+                }
+              />
+
+              <DetailItem
+                label="Early Checkout"
+                value={
+                  attendance.isEarlyCheckout
+                    ? `${attendance.earlyCheckoutMinutes || 0} min`
+                    : "No"
+                }
+              />
+
+              <DetailItem
+                label="Overtime"
+                value={
+                  attendance.overtimeMinutes
+                    ? formatMinutes(attendance.overtimeMinutes)
+                    : "0h 0m"
+                }
+              />
+
+              <DetailItem label="Source" value={attendance.source || "—"} />
+            </div>
+          </div>
+
+          {/* Location */}
+
+          <div>
+            <h4 className="mb-3 text-sm font-semibold text-slate-900">
+              Location Verification
+            </h4>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <LocationCard
+                title="Check-in Location"
+                location={attendance.checkIn}
+              />
+
+              <LocationCard
+                title="Check-out Location"
+                location={attendance.checkOut}
+              />
+            </div>
+          </div>
+
+          {/* Remarks */}
+
+          {attendance.remarks && (
+            <div>
+              <h4 className="mb-2 text-sm font-semibold text-slate-900">
+                Remarks
+              </h4>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                {attendance.remarks}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ========================================================================== */
+/* Detail Item                                                                */
+/* ========================================================================== */
+
+const DetailItem = ({ label, value }) => {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-3">
+      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+        {label}
+      </p>
+
+      <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
+    </div>
+  );
+};
+
+/* ========================================================================== */
+/* Location Card                                                              */
+/* ========================================================================== */
+
+const LocationCard = ({ title, location }) => {
+  const latitude = location?.location?.latitude;
+  const longitude = location?.location?.longitude;
+  const accuracy = location?.location?.accuracy;
+
+  if (latitude == null || longitude == null) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-200 p-4">
+        <div className="flex items-center gap-2 text-slate-400">
+          <MapPin size={16} />
+
+          <span className="text-sm font-medium">{title}</span>
+        </div>
+
+        <p className="mt-2 text-xs text-slate-400">Location not available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-center gap-2">
+        <MapPin size={16} className="text-emerald-600" />
+
+        <span className="text-sm font-medium text-slate-800">{title}</span>
+      </div>
+
+      <div className="mt-3 space-y-1 text-xs text-slate-500">
+        <p>
+          Latitude:{" "}
+          <span className="font-medium text-slate-700">{latitude}</span>
+        </p>
+
+        <p>
+          Longitude:{" "}
+          <span className="font-medium text-slate-700">{longitude}</span>
+        </p>
+
+        {accuracy != null && (
+          <p>
+            Accuracy:{" "}
+            <span className="font-medium text-slate-700">
+              ±{Math.round(accuracy)}m
+            </span>
+          </p>
+        )}
+
+        {location.distanceFromOffice != null && (
+          <p>
+            Distance from office:{" "}
+            <span className="font-medium text-slate-700">
+              {Math.round(location.distanceFromOffice)}m
+            </span>
+          </p>
+        )}
+
+        {location.verification && (
+          <p>
+            Verification:{" "}
+            <span className="font-medium text-slate-700">
+              {location.verification}
+            </span>
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ========================================================================== */
+/* Empty State                                                                */
+/* ========================================================================== */
+
+const EmptyState = ({ hasFilters, onClear }) => {
+  return (
+    <div className="flex min-h-[280px] flex-col items-center justify-center px-6 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+        <CalendarDays size={21} />
+      </div>
+
+      <h3 className="mt-4 text-sm font-semibold text-slate-900">
+        No attendance records
+      </h3>
+
+      <p className="mt-1 max-w-sm text-sm text-slate-500">
+        {hasFilters
+          ? "No attendance records match your current filters."
+          : "There are no attendance records for the selected date."}
+      </p>
+
+      {hasFilters && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="mt-4 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+        >
+          Clear filters
+        </button>
+      )}
+    </div>
+  );
+};
+
+/* ========================================================================== */
+/* Loading Skeleton                                                           */
+/* ========================================================================== */
+
+const AttendanceTableSkeleton = () => {
+  return (
+    <div className="divide-y divide-slate-100">
+      {Array.from({ length: 7 }).map((_, index) => (
+        <div
+          key={index}
+          className="flex min-w-[1000px] items-center gap-6 px-5 py-4"
+        >
+          <div className="flex w-[220px] items-center gap-3">
+            <div className="h-9 w-9 animate-pulse rounded-full bg-slate-100" />
+
+            <div className="space-y-2">
+              <div className="h-3 w-28 animate-pulse rounded bg-slate-100" />
+              <div className="h-2.5 w-20 animate-pulse rounded bg-slate-100" />
+            </div>
+          </div>
+
+          <div className="h-3 w-28 animate-pulse rounded bg-slate-100" />
+
+          <div className="h-3 w-20 animate-pulse rounded bg-slate-100" />
+
+          <div className="h-6 w-16 animate-pulse rounded-full bg-slate-100" />
+
+          <div className="h-3 w-14 animate-pulse rounded bg-slate-100" />
+
+          <div className="h-3 w-14 animate-pulse rounded bg-slate-100" />
+
+          <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
+
+          <div className="h-7 w-7 animate-pulse rounded-lg bg-slate-100" />
+        </div>
+      ))}
     </div>
   );
 };
