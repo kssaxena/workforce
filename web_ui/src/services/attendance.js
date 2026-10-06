@@ -12,3 +12,6 @@ export const getAttendanceSummary = (params = {}) =>
 
 export const getCompanyAttendance = (params = {}) =>
   api.get("/attendance/company", { params });
+
+export const regularizeAttendance = (data) =>
+  api.patch("/attendance/regularize", data);

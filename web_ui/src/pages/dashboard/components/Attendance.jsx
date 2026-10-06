@@ -18,6 +18,7 @@ import {
 import {
   getAttendanceSummary,
   getCompanyAttendance,
+  regularizeAttendance,
 } from "../../../services/attendance";
 
 import {
@@ -131,9 +132,36 @@ const getStatusConfig = (status) => {
       };
   }
 };
+const toDateTimeLocal = (timestamp) => {
+  if (!timestamp) return "";
+
+  const date = new Date(timestamp);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  const day = String(date.getDate()).padStart(2, "0");
+
+  const hours = String(date.getHours()).padStart(2, "0");
+
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+const extractDate = (date) => {
+  if (!date) return "";
+
+  return new Date(date).toISOString().slice(0, 10);
+};
 
 const Attendance = () => {
   const today = getDateString();
+
+  const [editingAttendance, setEditingAttendance] = useState(null);
+  const [savingAttendance, setSavingAttendance] = useState(false);
+  const [regularizationError, setRegularizationError] = useState("");
+  const [regularizationSuccess, setRegularizationSuccess] = useState("");
 
   const [departments, setDepartments] = useState([]);
   const [organizationUnits, setOrganizationUnits] = useState([]);
@@ -233,6 +261,30 @@ const Attendance = () => {
     },
     [startDate, endDate, status, departmentId, organizationUnitId, search],
   );
+  const handleRegularizeAttendance = async (formData) => {
+    try {
+      setSavingAttendance(true);
+      setRegularizationError("");
+      setRegularizationSuccess("");
+
+      await regularizeAttendance(formData);
+
+      setRegularizationSuccess("Attendance updated successfully.");
+
+      setEditingAttendance(null);
+      setSelectedAttendance(null);
+
+      await fetchAttendance({ silent: true });
+    } catch (err) {
+      console.error("Attendance regularization failed:", err);
+
+      setRegularizationError(
+        err?.response?.data?.message || "Unable to update attendance.",
+      );
+    } finally {
+      setSavingAttendance(false);
+    }
+  };
 
   useEffect(() => {
     fetchAttendance();
@@ -584,10 +636,31 @@ const Attendance = () => {
       {/* Attendance Detail Modal                                            */}
       {/* ------------------------------------------------------------------ */}
 
-      {selectedAttendance && (
+      {selectedAttendance && !editingAttendance && (
         <AttendanceDetailModal
           attendance={selectedAttendance}
           onClose={() => setSelectedAttendance(null)}
+          onEdit={() => {
+            setRegularizationError("");
+            setRegularizationSuccess("");
+            setEditingAttendance(selectedAttendance);
+          }}
+        />
+      )}
+
+      {editingAttendance && (
+        <AttendanceRegularizationModal
+          attendance={editingAttendance}
+          loading={savingAttendance}
+          error={regularizationError}
+          success={regularizationSuccess}
+          onClose={() => {
+            if (!savingAttendance) {
+              setEditingAttendance(null);
+              setRegularizationError("");
+            }
+          }}
+          onSubmit={handleRegularizeAttendance}
         />
       )}
 
@@ -624,10 +697,6 @@ const Attendance = () => {
   );
 };
 
-/* ========================================================================== */
-/* Summary Card                                                               */
-/* ========================================================================== */
-
 const SummaryCard = ({
   title,
   value,
@@ -658,10 +727,6 @@ const SummaryCard = ({
   );
 };
 
-/* ========================================================================== */
-/* Mini Summary                                                               */
-/* ========================================================================== */
-
 const MiniSummary = ({ label, value }) => {
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
@@ -671,10 +736,6 @@ const MiniSummary = ({ label, value }) => {
     </div>
   );
 };
-
-/* ========================================================================== */
-/* Filter Field                                                               */
-/* ========================================================================== */
 
 const FilterField = ({ label, children }) => {
   return (
@@ -687,10 +748,6 @@ const FilterField = ({ label, children }) => {
     </label>
   );
 };
-
-/* ========================================================================== */
-/* Attendance Row                                                             */
-/* ========================================================================== */
 
 const AttendanceRow = ({ record, onClick }) => {
   const employee = record.employeeId;
@@ -832,11 +889,7 @@ const AttendanceRow = ({ record, onClick }) => {
   );
 };
 
-/* ========================================================================== */
-/* Attendance Detail Modal                                                    */
-/* ========================================================================== */
-
-const AttendanceDetailModal = ({ attendance, onClose }) => {
+const AttendanceDetailModal = ({ attendance, onClose, onEdit }) => {
   const employee = attendance.employeeId;
   const statusConfig = getStatusConfig(attendance.status);
 
@@ -870,13 +923,23 @@ const AttendanceDetailModal = ({ attendance, onClose }) => {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-          >
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onEdit}
+              className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white transition hover:bg-slate-800"
+            >
+              Edit Attendance
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -1010,9 +1073,249 @@ const AttendanceDetailModal = ({ attendance, onClose }) => {
   );
 };
 
-/* ========================================================================== */
-/* Detail Item                                                                */
-/* ========================================================================== */
+const AttendanceRegularizationModal = ({
+  attendance,
+  loading,
+  error,
+  success,
+  onClose,
+  onSubmit,
+}) => {
+  const employee = attendance.employeeId;
+
+  const initialCheckIn = attendance.checkIn?.timestamp
+    ? toDateTimeLocal(attendance.checkIn.timestamp)
+    : "";
+
+  const initialCheckOut = attendance.checkOut?.timestamp
+    ? toDateTimeLocal(attendance.checkOut.timestamp)
+    : "";
+
+  const [status, setStatus] = useState(attendance.status || "PRESENT");
+
+  const [checkIn, setCheckIn] = useState(initialCheckIn);
+
+  const [checkOut, setCheckOut] = useState(initialCheckOut);
+
+  const [remarks, setRemarks] = useState(attendance.remarks || "");
+
+  const [formError, setFormError] = useState("");
+
+  const isWorkingStatus = status === "PRESENT" || status === "HALF_DAY";
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    setFormError("");
+
+    if (!status) {
+      setFormError("Please select an attendance status.");
+      return;
+    }
+
+    if (isWorkingStatus && checkIn && checkOut) {
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+
+      if (checkOutDate <= checkInDate) {
+        setFormError("Check-out must be later than check-in.");
+        return;
+      }
+    }
+
+    onSubmit({
+      employeeId: employee._id,
+
+      date: extractDate(attendance.date),
+
+      status,
+
+      checkIn:
+        isWorkingStatus && checkIn ? new Date(checkIn).toISOString() : null,
+
+      checkOut:
+        isWorkingStatus && checkOut ? new Date(checkOut).toISOString() : null,
+
+      remarks: remarks.trim(),
+    });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !loading) {
+          onClose();
+        }
+      }}
+    >
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        {/* Header */}
+
+        <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
+          <div>
+            <p className="text-xs font-medium text-slate-400">
+              Attendance Regularization
+            </p>
+
+            <h3 className="mt-1 text-base font-semibold text-slate-900">
+              {getEmployeeName(employee)}
+            </h3>
+
+            <p className="mt-1 text-xs text-slate-500">
+              {employee?.employeeCode || "—"} · {formatDate(attendance.date)}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            disabled={loading}
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Form */}
+
+        <form onSubmit={handleSubmit} className="space-y-5 p-6">
+          {/* Status */}
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">
+              Attendance Status
+            </label>
+
+            <select
+              value={status}
+              disabled={loading}
+              onChange={(event) => setStatus(event.target.value)}
+              className="filter-input"
+            >
+              <option value="PRESENT">Present</option>
+
+              <option value="ABSENT">Absent</option>
+
+              <option value="HALF_DAY">Half Day</option>
+
+              <option value="ON_LEAVE">On Leave</option>
+
+              <option value="HOLIDAY">Holiday</option>
+
+              <option value="WEEK_OFF">Week Off</option>
+            </select>
+          </div>
+
+          {/* Timing */}
+
+          {isWorkingStatus && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-slate-600">
+                  Check-in
+                </label>
+
+                <input
+                  type="datetime-local"
+                  value={checkIn}
+                  disabled={loading}
+                  onChange={(event) => setCheckIn(event.target.value)}
+                  className="filter-input"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-slate-600">
+                  Check-out
+                </label>
+
+                <input
+                  type="datetime-local"
+                  value={checkOut}
+                  disabled={loading}
+                  onChange={(event) => setCheckOut(event.target.value)}
+                  className="filter-input"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Explanation */}
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">
+              Remarks
+            </label>
+
+            <textarea
+              value={remarks}
+              disabled={loading}
+              onChange={(event) => setRemarks(event.target.value)}
+              rows={4}
+              maxLength={1000}
+              placeholder="Explain why this attendance is being corrected..."
+              className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+            />
+
+            <div className="mt-1 text-right text-[11px] text-slate-400">
+              {remarks.length}/1000
+            </div>
+          </div>
+
+          {/* Warning */}
+
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-xs leading-5 text-amber-800">
+              This change will be recorded as an <strong>ADMIN</strong>{" "}
+              attendance regularization and will replace the existing attendance
+              values for this employee and date.
+            </p>
+          </div>
+
+          {/* Error */}
+
+          {(formError || error) && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs leading-5 text-red-700">
+              {formError || error}
+            </div>
+          )}
+
+          {/* Success */}
+
+          {success && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-700">
+              {success}
+            </div>
+          )}
+
+          {/* Actions */}
+
+          <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={onClose}
+              className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading && <Loader2 size={16} className="animate-spin" />}
+
+              {loading ? "Saving..." : "Save Attendance"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const DetailItem = ({ label, value }) => {
   return (
@@ -1025,10 +1328,6 @@ const DetailItem = ({ label, value }) => {
     </div>
   );
 };
-
-/* ========================================================================== */
-/* Location Card                                                              */
-/* ========================================================================== */
 
 const LocationCard = ({ title, location }) => {
   const latitude = location?.location?.latitude;
@@ -1099,10 +1398,6 @@ const LocationCard = ({ title, location }) => {
   );
 };
 
-/* ========================================================================== */
-/* Empty State                                                                */
-/* ========================================================================== */
-
 const EmptyState = ({ hasFilters, onClear }) => {
   return (
     <div className="flex min-h-[280px] flex-col items-center justify-center px-6 text-center">
@@ -1132,10 +1427,6 @@ const EmptyState = ({ hasFilters, onClear }) => {
     </div>
   );
 };
-
-/* ========================================================================== */
-/* Loading Skeleton                                                           */
-/* ========================================================================== */
 
 const AttendanceTableSkeleton = () => {
   return (
