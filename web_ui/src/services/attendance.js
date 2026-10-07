@@ -18,3 +18,15 @@ export const getAttendanceDetail = (employeeId, params = {}) =>
   api.get(`/attendance/admin/${employeeId}`, {
     params,
   });
+
+export const createAttendanceRegularization = (data) =>
+  api.post("/attendance/regularization", data);
+
+export const getMyAttendanceRegularizations = (params = {}) =>
+  api.get("/attendance/regularization/my", { params });
+
+export const getAttendanceRegularizations = (params = {}) =>
+  api.get("/attendance/regularization/admin", { params });
+
+export const reviewAttendanceRegularization = (requestId, data) =>
+  api.patch(`/attendance/regularization/${requestId}/review`, data);
