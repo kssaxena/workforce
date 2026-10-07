@@ -30,3 +30,13 @@ export const getAttendanceRegularizations = (params = {}) =>
 
 export const reviewAttendanceRegularization = (requestId, data) =>
   api.patch(`/attendance/regularization/${requestId}/review`, data);
+
+export const getDailyAttendanceReport = (params = {}) =>
+  api.get("/attendance/reports/daily", {
+    params,
+  });
+
+export const getMonthlyAttendanceReport = (params = {}) =>
+  api.get("/attendance/reports/monthly", {
+    params,
+  });
