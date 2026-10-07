@@ -20,6 +20,10 @@ import {
   getCompanyAttendanceRegularizationController,
   reviewAttendanceRegularizationController,
 } from "../controllers/attendance.controller.js";
+import {
+  getDailyAttendanceReportController,
+  getMonthlyAttendanceReportController,
+} from "../controllers/attendance.controller.js";
 
 const router = Router();
 
@@ -75,6 +79,18 @@ router.get(
   "/admin",
   authorize(PERMISSIONS.ATTENDANCE_READ),
   getAttendanceDashboardController,
+);
+
+router.get(
+  "/reports/daily",
+  authorize(PERMISSIONS.ATTENDANCE_READ),
+  getDailyAttendanceReportController,
+);
+
+router.get(
+  "/reports/monthly",
+  authorize(PERMISSIONS.ATTENDANCE_READ),
+  getMonthlyAttendanceReportController,
 );
 
 router.get(

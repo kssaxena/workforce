@@ -20,6 +20,11 @@ import {
   reviewAttendanceRegularization,
 } from "../services/attendanceRegularizationRequest.service.js";
 
+import {
+  getDailyAttendanceReport,
+  getMonthlyAttendanceReport,
+} from "../services/attendanceReport.service.js";
+
 /**
  * Employee check-in
  */
@@ -417,5 +422,95 @@ export const reviewAttendanceRegularizationController = asyncHandler(
         : "Attendance regularization rejected successfully";
 
     return res.status(200).json(new ApiResponse(200, result, message));
+  },
+);
+
+export const getDailyAttendanceReportController = asyncHandler(
+  async (req, res) => {
+    const company = await Company.findById(req.user.companyId).select(
+      "settings.timezone",
+    );
+
+    if (!company) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, null, "Company not found"));
+    }
+
+    const timezone = company.settings?.timezone || "Asia/Kolkata";
+
+    const report = await getDailyAttendanceReport({
+      userId: req.user.userId,
+
+      companyId: req.user.companyId,
+
+      date: req.query.date,
+
+      departmentId: req.query.departmentId,
+
+      organizationUnitId: req.query.organizationUnitId,
+
+      employmentStatus: req.query.employmentStatus,
+
+      status: req.query.status,
+
+      search: req.query.search,
+
+      timezone,
+    });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          report,
+          "Daily attendance report fetched successfully",
+        ),
+      );
+  },
+);
+
+export const getMonthlyAttendanceReportController = asyncHandler(
+  async (req, res) => {
+    const company = await Company.findById(req.user.companyId).select(
+      "settings.timezone",
+    );
+
+    if (!company) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, null, "Company not found"));
+    }
+
+    const timezone = company.settings?.timezone || "Asia/Kolkata";
+
+    const report = await getMonthlyAttendanceReport({
+      userId: req.user.userId,
+
+      companyId: req.user.companyId,
+
+      month: req.query.month,
+
+      departmentId: req.query.departmentId,
+
+      organizationUnitId: req.query.organizationUnitId,
+
+      employmentStatus: req.query.employmentStatus,
+
+      search: req.query.search,
+
+      timezone,
+    });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          report,
+          "Monthly attendance report fetched successfully",
+        ),
+      );
   },
 );
