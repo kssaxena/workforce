@@ -23,12 +23,17 @@ import {
   AlertCircle,
   Moon,
   CalendarOff,
+  Clock,
 } from "lucide-react";
 
 import {
   getAttendanceDashboard,
   getAttendanceDetail,
+  getMyAttendance,
+  createAttendanceRegularization,
+  getMyAttendanceRegularizations,
 } from "../../../services/attendance";
+import AttendanceRegularization from "./AttendanceRegularization";
 
 /* =========================================================
    HELPERS
@@ -749,6 +754,40 @@ const AttendanceDetailDrawer = ({ detail, loading, error, onClose }) => {
    MAIN COMPONENT
 ========================================================= */
 
+const RegularizationStatusBadge = ({ status }) => {
+  const config = {
+    PENDING: {
+      label: "Pending",
+      className: "border-amber-200 bg-amber-50 text-amber-700",
+    },
+
+    APPROVED: {
+      label: "Approved",
+      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    },
+
+    REJECTED: {
+      label: "Rejected",
+      className: "border-rose-200 bg-rose-50 text-rose-700",
+    },
+
+    CANCELLED: {
+      label: "Cancelled",
+      className: "border-slate-200 bg-slate-50 text-slate-600",
+    },
+  };
+
+  const current = config[status] || config.PENDING;
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold ${current.className}`}
+    >
+      {current.label}
+    </span>
+  );
+};
+
 const Attendance = () => {
   const today = useMemo(() => {
     const now = new Date();
@@ -761,6 +800,24 @@ const Attendance = () => {
 
     return `${year}-${month}-${day}`;
   }, []);
+
+  const [attendanceView, setAttendanceView] = useState("dashboard");
+  const [regularizationRequests, setRegularizationRequests] = useState([]);
+  const [regularizationLoading, setRegularizationLoading] = useState(false);
+  const [regularizationError, setRegularizationError] = useState(null);
+
+  const [showRegularizationModal, setShowRegularizationModal] = useState(false);
+
+  const [regularizationSubmitting, setRegularizationSubmitting] =
+    useState(false);
+
+  const [regularizationForm, setRegularizationForm] = useState({
+    date: "",
+    requestedStatus: "PRESENT",
+    requestedCheckIn: "",
+    requestedCheckOut: "",
+    reason: "",
+  });
 
   const [date, setDate] = useState(today);
 
@@ -781,6 +838,33 @@ const Attendance = () => {
   const [detailLoading, setDetailLoading] = useState(false);
 
   const [detailError, setDetailError] = useState("");
+
+  const loadRegularizationRequests = async () => {
+    try {
+      setRegularizationLoading(true);
+      setRegularizationError(null);
+
+      const response = await getMyAttendanceRegularizations();
+
+      setRegularizationRequests(response?.data?.data ?? response?.data ?? []);
+    } catch (error) {
+      console.error(
+        "Failed to load attendance regularization requests:",
+        error,
+      );
+
+      setRegularizationError(
+        error?.response?.data?.message ||
+          "Unable to load regularization requests.",
+      );
+    } finally {
+      setRegularizationLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRegularizationRequests();
+  }, []);
 
   /* =======================================================
      LOAD DASHBOARD
@@ -885,8 +969,92 @@ const Attendance = () => {
      RENDER
   ======================================================= */
 
-  return (
+  const openRegularizationModal = () => {
+    setRegularizationForm({
+      date: "",
+      requestedStatus: "PRESENT",
+      requestedCheckIn: "",
+      requestedCheckOut: "",
+      reason: "",
+    });
+
+    setShowRegularizationModal(true);
+  };
+
+  const closeRegularizationModal = () => {
+    if (regularizationSubmitting) return;
+
+    setShowRegularizationModal(false);
+  };
+
+  const submitRegularization = async (event) => {
+    event.preventDefault();
+
+    if (!regularizationForm.date) {
+      return;
+    }
+
+    if (!regularizationForm.reason.trim()) {
+      return;
+    }
+
+    try {
+      setRegularizationSubmitting(true);
+
+      const payload = {
+        date: regularizationForm.date,
+
+        requestedStatus: regularizationForm.requestedStatus,
+
+        requestedCheckIn: regularizationForm.requestedCheckIn
+          ? new Date(regularizationForm.requestedCheckIn).toISOString()
+          : null,
+
+        requestedCheckOut: regularizationForm.requestedCheckOut
+          ? new Date(regularizationForm.requestedCheckOut).toISOString()
+          : null,
+
+        reason: regularizationForm.reason.trim(),
+      };
+
+      await createAttendanceRegularization(payload);
+
+      setShowRegularizationModal(false);
+
+      await loadRegularizationRequests();
+    } catch (error) {
+      console.error("Failed to create regularization request:", error);
+
+      setRegularizationError(
+        error?.response?.data?.message ||
+          "Unable to submit regularization request.",
+      );
+    } finally {
+      setRegularizationSubmitting(false);
+    }
+  };
+
+  return attendanceView === "dashboard" ? (
     <>
+      <div className="mb-6 flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+        {[
+          ["dashboard", "Dashboard"],
+          ["regularization", "Regularization"],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setAttendanceView(value)}
+            className={`rounded-xl px-4 py-2.5 text-xs font-bold transition ${
+              attendanceView === value
+                ? "bg-blue-600 text-white"
+                : "text-slate-500 hover:bg-slate-50"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <div className="space-y-6">
         {/* =================================================
             HEADER
@@ -1314,6 +1482,301 @@ const Attendance = () => {
         </div>
       </div>
 
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-600">
+              Attendance Correction
+            </p>
+
+            <h2 className="mt-1 text-lg font-black text-slate-900">
+              Regularization Requests
+            </h2>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Request a correction when your attendance record needs to be
+              changed.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={openRegularizationModal}
+            className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-blue-700"
+          >
+            Request Correction
+          </button>
+        </div>
+
+        {regularizationError && (
+          <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700">
+            {regularizationError}
+          </div>
+        )}
+
+        <div className="mt-5 overflow-hidden rounded-xl border border-slate-100">
+          {regularizationLoading ? (
+            <div className="space-y-3 p-5">
+              {[1, 2, 3].map((item) => (
+                <div
+                  key={item}
+                  className="h-12 animate-pulse rounded-lg bg-slate-100"
+                />
+              ))}
+            </div>
+          ) : regularizationRequests.length === 0 ? (
+            <div className="flex min-h-[180px] flex-col items-center justify-center bg-slate-50/50 px-6 text-center">
+              <div className="grid size-10 place-items-center rounded-xl bg-white text-slate-400 shadow-sm">
+                <Clock size={18} />
+              </div>
+
+              <p className="mt-3 text-xs font-black text-slate-700">
+                No regularization requests
+              </p>
+
+              <p className="mt-1 max-w-sm text-[11px] leading-5 text-slate-400">
+                Your attendance correction requests will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px] text-left">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                      Date
+                    </th>
+
+                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                      Requested Status
+                    </th>
+
+                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                      Check In
+                    </th>
+
+                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                      Check Out
+                    </th>
+
+                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                      Reason
+                    </th>
+
+                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {regularizationRequests.map((request) => (
+                    <tr
+                      key={request._id}
+                      className="border-b border-slate-100 last:border-b-0"
+                    >
+                      <td className="px-4 py-4 text-xs font-bold text-slate-700">
+                        {formatDate(request.date)}
+                      </td>
+
+                      <td className="px-4 py-4 text-xs font-semibold text-slate-600">
+                        {request.requestedStatus}
+                      </td>
+
+                      <td className="px-4 py-4 text-xs text-slate-500">
+                        {request.requestedCheckIn
+                          ? formatTime(request.requestedCheckIn)
+                          : "—"}
+                      </td>
+
+                      <td className="px-4 py-4 text-xs text-slate-500">
+                        {request.requestedCheckOut
+                          ? formatTime(request.requestedCheckOut)
+                          : "—"}
+                      </td>
+
+                      <td className="max-w-[260px] truncate px-4 py-4 text-xs text-slate-500">
+                        {request.reason || "—"}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <RegularizationStatusBadge status={request.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {showRegularizationModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+          <div
+            className="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="border-b border-slate-100 px-5 py-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-600">
+                    Attendance Correction
+                  </p>
+
+                  <h2 className="mt-1 text-lg font-black text-slate-900">
+                    Request Regularization
+                  </h2>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    Submit a correction for your attendance record.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={closeRegularizationModal}
+                  className="grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <X size={17} />
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={submitRegularization} className="space-y-5 p-5">
+              {/* Date */}
+              <div>
+                <label className="mb-2 block text-[11px] font-bold text-slate-600">
+                  Attendance Date
+                </label>
+
+                <input
+                  type="date"
+                  value={regularizationForm.date}
+                  onChange={(event) =>
+                    setRegularizationForm((previous) => ({
+                      ...previous,
+                      date: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  required
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="mb-2 block text-[11px] font-bold text-slate-600">
+                  Requested Attendance Status
+                </label>
+
+                <select
+                  value={regularizationForm.requestedStatus}
+                  onChange={(event) =>
+                    setRegularizationForm((previous) => ({
+                      ...previous,
+                      requestedStatus: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="PRESENT">Present</option>
+                  <option value="HALF_DAY">Half Day</option>
+                  <option value="ABSENT">Absent</option>
+                </select>
+              </div>
+
+              {/* Times */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-[11px] font-bold text-slate-600">
+                    Requested Check In
+                  </label>
+
+                  <input
+                    type="datetime-local"
+                    value={regularizationForm.requestedCheckIn}
+                    onChange={(event) =>
+                      setRegularizationForm((previous) => ({
+                        ...previous,
+                        requestedCheckIn: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[11px] font-bold text-slate-600">
+                    Requested Check Out
+                  </label>
+
+                  <input
+                    type="datetime-local"
+                    value={regularizationForm.requestedCheckOut}
+                    onChange={(event) =>
+                      setRegularizationForm((previous) => ({
+                        ...previous,
+                        requestedCheckOut: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+              </div>
+
+              {/* Reason */}
+              <div>
+                <label className="mb-2 block text-[11px] font-bold text-slate-600">
+                  Reason
+                </label>
+
+                <textarea
+                  value={regularizationForm.reason}
+                  onChange={(event) =>
+                    setRegularizationForm((previous) => ({
+                      ...previous,
+                      reason: event.target.value,
+                    }))
+                  }
+                  rows={4}
+                  maxLength={1000}
+                  placeholder="Explain why your attendance needs correction..."
+                  className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  required
+                />
+
+                <div className="mt-1 text-right text-[10px] text-slate-400">
+                  {regularizationForm.reason.length}/1000
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+                <button
+                  type="button"
+                  onClick={closeRegularizationModal}
+                  disabled={regularizationSubmitting}
+                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={regularizationSubmitting}
+                  className="rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {regularizationSubmitting
+                    ? "Submitting..."
+                    : "Submit Request"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* =================================================
           DETAIL DRAWER
       ================================================= */}
@@ -1325,6 +1788,8 @@ const Attendance = () => {
         onClose={closeDetail}
       />
     </>
+  ) : (
+    <AttendanceRegularization />
   );
 };
 

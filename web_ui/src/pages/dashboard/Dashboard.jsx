@@ -37,6 +37,8 @@ import OrganizationUnit from "./components/OrganizationUnit";
 import WorkSchedule from "./components/WorkSchedule";
 import Hierarchy from "./components/Hierarchy";
 import AttendanceSettings from "./components/AttendanceSettings";
+import AttendanceRegularization from "./components/AttendanceRegularization";
+import Audit from "./components/Audit";
 
 const navigation = [
   {
@@ -86,6 +88,11 @@ const navigation = [
         id: "departments",
         label: "Departments",
         icon: Building2,
+      },
+      {
+        id: "audit",
+        label: "Audit",
+        icon: ShieldCheck,
       },
       {
         id: "organizationUnits",
@@ -254,6 +261,9 @@ const Dashboard = () => {
 
       case "departments":
         return <Department />;
+
+      case "audit":
+        return <Audit />;
 
       case "organizationUnits":
         return <OrganizationUnit />;
