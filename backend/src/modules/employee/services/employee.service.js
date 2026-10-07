@@ -269,15 +269,15 @@ export const createEmployee = async ({ companyId, createdBy, data }) => {
        * ----------------------------------------------------
        */
 
-      const manager = await Employee.findOne({
-        _id: reportsTo,
-        companyId,
-        isActive: true,
-      }).session(session);
+      // const manager = await Employee.findOne({
+      //   _id: reportsTo,
+      //   companyId,
+      //   isActive: true,
+      // }).session(session);
 
-      if (!manager) {
-        throw new Error("Reporting manager not found");
-      }
+      // if (!manager) {
+      //   throw new Error("Reporting manager not found");
+      // }
 
       await UserRole.create(
         [

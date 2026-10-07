@@ -23,6 +23,7 @@ import {
   Wallet,
   X,
   MapPinned,
+  TrendingUp,
 } from "lucide-react";
 
 import useAuth from "../../hooks/useAuth";
@@ -35,6 +36,11 @@ import Access from "./components/Access";
 import Department from "./components/Department";
 import OrganizationUnit from "./components/OrganizationUnit";
 import WorkSchedule from "./components/WorkSchedule";
+import Hierarchy from "./components/Hierarchy";
+import AttendanceSettings from "./components/AttendanceSettings";
+import AttendanceRegularization from "./components/AttendanceRegularization";
+import Audit from "./components/Audit";
+import AttendanceReports from "./components/AttendanceReports";
 
 const navigation = [
   {
@@ -53,6 +59,11 @@ const navigation = [
       {
         id: "attendance",
         label: "Attendance",
+        icon: ClipboardCheck,
+      },
+      {
+        id: "attendance-settings",
+        label: "Attendance Settings",
         icon: ClipboardCheck,
       },
       {
@@ -79,6 +90,16 @@ const navigation = [
         id: "departments",
         label: "Departments",
         icon: Building2,
+      },
+      {
+        id: "audit",
+        label: "Audit",
+        icon: ShieldCheck,
+      },
+      {
+        id: "attendance-reports",
+        label: "Attendance Reports",
+        icon: TrendingUp,
       },
       {
         id: "organizationUnits",
@@ -236,6 +257,9 @@ const Dashboard = () => {
       case "attendance":
         return <Attendance />;
 
+      case "attendance-settings":
+        return <AttendanceSettings />;
+
       case "payroll":
         return <Payroll />;
 
@@ -245,11 +269,20 @@ const Dashboard = () => {
       case "departments":
         return <Department />;
 
+      case "audit":
+        return <Audit />;
+
+      case "attendance-reports":
+        return <AttendanceReports />;
+
       case "organizationUnits":
         return <OrganizationUnit />;
 
       case "workSchedules":
         return <WorkSchedule />;
+
+      case "hierarchy":
+        return <Hierarchy />;
 
       case "overview":
       default:
