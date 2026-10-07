@@ -13,9 +13,12 @@ import {
   getAttendanceDetail,
 } from "../services/attendanceAdmin.service.js";
 
-/* =========================================================
-   EMPLOYEE ATTENDANCE
-========================================================= */
+import {
+  createAttendanceRegularizationRequest,
+  getMyAttendanceRegularizationRequests,
+  getCompanyAttendanceRegularizationRequests,
+  reviewAttendanceRegularization,
+} from "../services/attendanceRegularizationRequest.service.js";
 
 /**
  * Employee check-in
@@ -275,3 +278,144 @@ export const getAttendanceDetailController = asyncHandler(async (req, res) => {
       new ApiResponse(200, detail, "Attendance detail fetched successfully"),
     );
 });
+
+/* =========================================================
+   ATTENDANCE REGULARIZATION
+========================================================= */
+
+/**
+ * Employee creates an attendance regularization request.
+ *
+ * POST
+ * /api/v1/attendance/regularization
+ */
+export const createAttendanceRegularizationController = asyncHandler(
+  async (req, res) => {
+    const request = await createAttendanceRegularizationRequest({
+      userId: req.user.userId,
+      companyId: req.user.companyId,
+
+      date: req.body.date,
+      requestedStatus: req.body.requestedStatus,
+
+      requestedCheckIn: req.body.requestedCheckIn,
+      requestedCheckOut: req.body.requestedCheckOut,
+
+      reason: req.body.reason,
+    });
+
+    return res
+      .status(201)
+      .json(
+        new ApiResponse(
+          201,
+          request,
+          "Attendance regularization request created successfully",
+        ),
+      );
+  },
+);
+
+/**
+ * Get regularization requests created by
+ * the currently logged-in employee.
+ *
+ * GET
+ * /api/v1/attendance/regularization/my
+ *
+ * Optional:
+ * ?status=PENDING
+ */
+export const getMyAttendanceRegularizationController = asyncHandler(
+  async (req, res) => {
+    const requests = await getMyAttendanceRegularizationRequests({
+      userId: req.user.userId,
+      companyId: req.user.companyId,
+      status: req.query.status,
+    });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          requests,
+          "Attendance regularization requests fetched successfully",
+        ),
+      );
+  },
+);
+
+/**
+ * Get company attendance regularization requests.
+ *
+ * Used by:
+ * - HR Admin
+ * - Company Admin
+ * - authorized reviewers
+ *
+ * GET
+ * /api/v1/attendance/regularization/admin
+ *
+ * Optional:
+ *
+ * ?status=PENDING
+ * ?employeeId=...
+ */
+export const getCompanyAttendanceRegularizationController = asyncHandler(
+  async (req, res) => {
+    const requests = await getCompanyAttendanceRegularizationRequests({
+      companyId: req.user.companyId,
+
+      status: req.query.status,
+
+      employeeId: req.query.employeeId,
+    });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          requests,
+          "Attendance regularization requests fetched successfully",
+        ),
+      );
+  },
+);
+
+/**
+ * Approve or reject an attendance regularization request.
+ *
+ * PATCH
+ * /api/v1/attendance/regularization/:requestId/review
+ *
+ * Body:
+ *
+ * {
+ *   "decision": "APPROVED",
+ *   "reviewRemarks": "Approved after verification"
+ * }
+ */
+export const reviewAttendanceRegularizationController = asyncHandler(
+  async (req, res) => {
+    const result = await reviewAttendanceRegularization({
+      requestId: req.params.requestId,
+
+      companyId: req.user.companyId,
+
+      reviewerId: req.user.userId,
+
+      decision: req.body.decision,
+
+      reviewRemarks: req.body.reviewRemarks,
+    });
+
+    const message =
+      req.body.decision === "APPROVED"
+        ? "Attendance regularization approved successfully"
+        : "Attendance regularization rejected successfully";
+
+    return res.status(200).json(new ApiResponse(200, result, message));
+  },
+);
