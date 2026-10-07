@@ -1,27 +1,25 @@
 import asyncHandler from "../../../core/middleware/asyncHandler.js";
 import ApiResponse from "../../../core/utils/ApiResponse.js";
+
 import Company from "../../company/models/company.model.js";
 import Employee from "../../employee/models/employee.model.js";
 
-import { checkIn } from "../services/attendance.service.js";
-import { checkOut } from "../services/attendance.service.js";
+import { checkIn, checkOut } from "../services/attendance.service.js";
+
+import { getEmployeeAttendance } from "../services/attendanceQuery.service.js";
 
 import {
-  getEmployeeAttendance,
-  getTodayAttendance,
-  getCompanyAttendance,
-  getAttendanceSummary,
-} from "../services/attendanceQuery.service.js";
+  getAttendanceDashboard,
+  getAttendanceDetail,
+} from "../services/attendanceAdmin.service.js";
 
-import { regularizeAttendance } from "../services/attendanceRegularization.service.js";
+/* =========================================================
+   EMPLOYEE ATTENDANCE
+========================================================= */
 
-import {
-  createAttendanceRegularizationRequest,
-  getMyAttendanceRegularizationRequests,
-  getCompanyAttendanceRegularizationRequests,
-  reviewAttendanceRegularization,
-} from "../services/attendanceRegularizationRequest.service.js";
-
+/**
+ * Employee check-in
+ */
 export const checkInController = asyncHandler(async (req, res) => {
   const attendance = await checkIn({
     userId: req.user.userId,
@@ -39,10 +37,14 @@ export const checkInController = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, attendance, "Check-in successful"));
 });
 
+/**
+ * Employee check-out
+ */
 export const checkOutController = asyncHandler(async (req, res) => {
   const attendance = await checkOut({
     userId: req.user.userId,
     companyId: req.user.companyId,
+
     latitude: req.body.latitude,
     longitude: req.body.longitude,
     accuracy: req.body.accuracy,
@@ -55,7 +57,16 @@ export const checkOutController = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, attendance, "Check-out successful"));
 });
 
+/**
+ * Get logged-in employee's attendance history.
+ */
 export const getMyAttendanceController = asyncHandler(async (req, res) => {
+  /*
+   * -----------------------------------------------------
+   * Find employee profile belonging to logged-in user
+   * -----------------------------------------------------
+   */
+
   const employee = await Employee.findOne({
     userId: req.user.userId,
     companyId: req.user.companyId,
@@ -68,6 +79,12 @@ export const getMyAttendanceController = asyncHandler(async (req, res) => {
       .json(new ApiResponse(404, null, "Employee profile not found"));
   }
 
+  /*
+   * -----------------------------------------------------
+   * Get company timezone
+   * -----------------------------------------------------
+   */
+
   const company = await Company.findById(req.user.companyId).select(
     "settings.timezone",
   );
@@ -78,12 +95,24 @@ export const getMyAttendanceController = asyncHandler(async (req, res) => {
       .json(new ApiResponse(404, null, "Company not found"));
   }
 
+  const timezone = company.settings?.timezone || "Asia/Kolkata";
+
+  /*
+   * -----------------------------------------------------
+   * Fetch attendance history
+   * -----------------------------------------------------
+   */
+
   const attendance = await getEmployeeAttendance({
     employeeId: employee._id,
+
     companyId: req.user.companyId,
+
     startDate: req.query.startDate,
+
     endDate: req.query.endDate,
-    timezone: company.settings?.timezone || "Asia/Kolkata",
+
+    timezone,
   });
 
   return res
@@ -97,107 +126,65 @@ export const getMyAttendanceController = asyncHandler(async (req, res) => {
     );
 });
 
-export const getCompanyAttendanceController = asyncHandler(async (req, res) => {
-  const attendance = await getCompanyAttendance({
-    companyId: req.user.companyId,
+/* =========================================================
+   ADMIN ATTENDANCE DASHBOARD
+========================================================= */
 
-    startDate: req.query.startDate,
-    endDate: req.query.endDate,
-
-    employeeId: req.query.employeeId,
-    departmentId: req.query.departmentId,
-    organizationUnitId: req.query.organizationUnitId,
-
-    status: req.query.status,
-    search: req.query.search,
-  });
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        attendance,
-        "Company attendance fetched successfully",
-      ),
-    );
-});
-
-export const getAttendanceSummaryController = asyncHandler(async (req, res) => {
-  const summary = await getAttendanceSummary({
-    companyId: req.user.companyId,
-
-    startDate: req.query.startDate,
-    endDate: req.query.endDate,
-
-    employeeId: req.query.employeeId,
-    departmentId: req.query.departmentId,
-    organizationUnitId: req.query.organizationUnitId,
-  });
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(200, summary, "Attendance summary fetched successfully"),
-    );
-});
-
-export const regularizeAttendanceController = asyncHandler(async (req, res) => {
-  const attendance = await regularizeAttendance({
-    companyId: req.user.companyId,
-    updatedBy: req.user.userId,
-
-    employeeId: req.body.employeeId,
-    date: req.body.date,
-    status: req.body.status,
-
-    checkIn: req.body.checkIn,
-    checkOut: req.body.checkOut,
-
-    remarks: req.body.remarks,
-  });
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(200, attendance, "Attendance regularized successfully"),
-    );
-});
-
-export const createAttendanceRegularizationController = asyncHandler(
+/**
+ * Get company attendance dashboard.
+ *
+ * Used by:
+ * - HR Admin
+ * - Company Admin
+ * - Managers / Team Leaders
+ *
+ * Visibility is handled inside the attendance admin service
+ * using the employee organization scope.
+ */
+export const getAttendanceDashboardController = asyncHandler(
   async (req, res) => {
-    const request = await createAttendanceRegularizationRequest({
+    /*
+     * -----------------------------------------------------
+     * Company timezone
+     * -----------------------------------------------------
+     */
+
+    const company = await Company.findById(req.user.companyId).select(
+      "settings.timezone",
+    );
+
+    if (!company) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, null, "Company not found"));
+    }
+
+    const timezone = company.settings?.timezone || "Asia/Kolkata";
+
+    /*
+     * -----------------------------------------------------
+     * Fetch dashboard
+     * -----------------------------------------------------
+     */
+
+    const dashboard = await getAttendanceDashboard({
       userId: req.user.userId,
+
       companyId: req.user.companyId,
 
-      date: req.body.date,
-      requestedStatus: req.body.requestedStatus,
+      date: req.query.date,
 
-      requestedCheckIn: req.body.requestedCheckIn,
+      departmentId: req.query.departmentId,
 
-      requestedCheckOut: req.body.requestedCheckOut,
+      organizationUnitId: req.query.organizationUnitId,
 
-      reason: req.body.reason,
-    });
+      employmentStatus: req.query.employmentStatus,
 
-    return res
-      .status(201)
-      .json(
-        new ApiResponse(
-          201,
-          request,
-          "Attendance regularization request submitted successfully",
-        ),
-      );
-  },
-);
-
-export const getMyAttendanceRegularizationController = asyncHandler(
-  async (req, res) => {
-    const requests = await getMyAttendanceRegularizationRequests({
-      userId: req.user.userId,
-      companyId: req.user.companyId,
       status: req.query.status,
+
+      search: req.query.search,
+
+      timezone,
     });
 
     return res
@@ -205,50 +192,86 @@ export const getMyAttendanceRegularizationController = asyncHandler(
       .json(
         new ApiResponse(
           200,
-          requests,
-          "Attendance regularization requests fetched successfully",
+          dashboard,
+          "Attendance dashboard fetched successfully",
         ),
       );
   },
 );
 
-export const getCompanyAttendanceRegularizationController = asyncHandler(
-  async (req, res) => {
-    const requests = await getCompanyAttendanceRegularizationRequests({
-      companyId: req.user.companyId,
-      status: req.query.status,
-      employeeId: req.query.employeeId,
-    });
+/* =========================================================
+   ADMIN ATTENDANCE DETAIL
+========================================================= */
 
+/**
+ * Get detailed attendance information for one employee.
+ *
+ * Example:
+ *
+ * GET
+ * /attendance/admin/:employeeId?date=2026-10-07
+ *
+ * The service also validates whether the logged-in user
+ * is allowed to view this employee.
+ */
+export const getAttendanceDetailController = asyncHandler(async (req, res) => {
+  /*
+   * -----------------------------------------------------
+   * Get company timezone
+   * -----------------------------------------------------
+   */
+
+  const company = await Company.findById(req.user.companyId).select(
+    "settings.timezone",
+  );
+
+  if (!company) {
     return res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          requests,
-          "Attendance regularization requests fetched successfully",
-        ),
-      );
-  },
-);
+      .status(404)
+      .json(new ApiResponse(404, null, "Company not found"));
+  }
 
-export const reviewAttendanceRegularizationController = asyncHandler(
-  async (req, res) => {
-    const result = await reviewAttendanceRegularization({
-      requestId: req.params.requestId,
-      companyId: req.user.companyId,
-      reviewerId: req.user.userId,
+  const timezone = company.settings?.timezone || "Asia/Kolkata";
 
-      decision: req.body.decision,
+  /*
+   * -----------------------------------------------------
+   * Fetch employee attendance detail
+   * -----------------------------------------------------
+   */
 
-      reviewRemarks: req.body.reviewRemarks,
-    });
+  const detail = await getAttendanceDetail({
+    userId: req.user.userId,
 
-    const message =
-      req.body.decision === "APPROVED"
-        ? "Attendance regularization approved successfully"
-        : "Attendance regularization rejected successfully";
+    companyId: req.user.companyId,
 
-    return res.status(200).json(new ApiResponse(200, result, message));
-  },
-);
+    employeeId: req.params.employeeId,
+
+    date: req.query.date,
+
+    timezone,
+  });
+
+  /*
+   * -----------------------------------------------------
+   * Employee not found / outside visibility scope
+   * -----------------------------------------------------
+   */
+
+  if (!detail) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, null, "Employee attendance record not found"));
+  }
+
+  /*
+   * -----------------------------------------------------
+   * Success
+   * -----------------------------------------------------
+   */
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, detail, "Attendance detail fetched successfully"),
+    );
+});
