@@ -1,143 +1,101 @@
 import { Router } from "express";
-
 import authenticate from "../../auth/middleware/authenticate.js";
-
 import authorize from "../../rbac/middleware/authorize.js";
-
 import { PERMISSIONS } from "../../rbac/constants/permission.js";
-
 import validate from "../../../core/middleware/validate.js";
-
 import {
   checkInSchema,
   checkOutSchema,
+  createAttendanceRegularizationSchema,
+  reviewAttendanceRegularizationSchema,
 } from "../validators/attendance.validator.js";
-
 import {
   checkInController,
   checkOutController,
   getMyAttendanceController,
   getAttendanceDashboardController,
   getAttendanceDetailController,
+  createAttendanceRegularizationController,
+  getMyAttendanceRegularizationController,
+  getCompanyAttendanceRegularizationController,
+  reviewAttendanceRegularizationController,
+} from "../controllers/attendance.controller.js";
+import {
+  getDailyAttendanceReportController,
+  getMonthlyAttendanceReportController,
 } from "../controllers/attendance.controller.js";
 
 const router = Router();
 
-/* =========================================================
-   AUTHENTICATION
-========================================================= */
-
 router.use(authenticate);
 
-/* =========================================================
-   EMPLOYEE ATTENDANCE
-========================================================= */
-
-/**
- * Employee Check-In
- *
- * POST
- * /api/v1/attendance/check-in
- */
 router.post(
   "/check-in",
-
   authorize(PERMISSIONS.ATTENDANCE_CREATE),
-
   validate(checkInSchema),
-
   checkInController,
 );
 
-/**
- * Employee Check-Out
- *
- * POST
- * /api/v1/attendance/check-out
- */
 router.post(
   "/check-out",
-
   authorize(PERMISSIONS.ATTENDANCE_CREATE),
-
   validate(checkOutSchema),
-
   checkOutController,
 );
 
-/**
- * Logged-in employee attendance history
- *
- * GET
- * /api/v1/attendance/my
- *
- * Optional query:
- *
- * ?startDate=2026-10-01
- * &endDate=2026-10-07
- */
 router.get(
   "/my",
-
   authorize(PERMISSIONS.ATTENDANCE_READ),
-
   getMyAttendanceController,
 );
 
-/* =========================================================
-   ADMIN ATTENDANCE DASHBOARD
-========================================================= */
+router.post(
+  "/regularization",
+  authorize(PERMISSIONS.ATTENDANCE_CREATE),
+  validate(createAttendanceRegularizationSchema),
+  createAttendanceRegularizationController,
+);
 
-/**
- * Company attendance dashboard
- *
- * GET
- * /api/v1/attendance/admin
- *
- * Optional query:
- *
- * ?date=2026-10-07
- * &departmentId=...
- * &organizationUnitId=...
- * &employmentStatus=ACTIVE
- * &status=PRESENT
- * &search=john
- *
- * IMPORTANT:
- *
- * This route MUST appear before:
- *
- * /admin/:employeeId
- *
- * so "admin" is not interpreted as an employeeId.
- */
+router.get(
+  "/regularization/my",
+  authorize(PERMISSIONS.ATTENDANCE_READ),
+  getMyAttendanceRegularizationController,
+);
+
+router.get(
+  "/regularization/admin",
+  authorize(PERMISSIONS.ATTENDANCE_READ),
+  getCompanyAttendanceRegularizationController,
+);
+
+router.patch(
+  "/regularization/:requestId/review",
+  authorize(PERMISSIONS.ATTENDANCE_APPROVE),
+  validate(reviewAttendanceRegularizationSchema),
+  reviewAttendanceRegularizationController,
+);
+
 router.get(
   "/admin",
-
   authorize(PERMISSIONS.ATTENDANCE_READ),
-
   getAttendanceDashboardController,
 );
 
-/* =========================================================
-   ADMIN ATTENDANCE DETAIL
-========================================================= */
+router.get(
+  "/reports/daily",
+  authorize(PERMISSIONS.ATTENDANCE_READ),
+  getDailyAttendanceReportController,
+);
 
-/**
- * Detailed attendance for one employee
- *
- * GET
- * /api/v1/attendance/admin/:employeeId
- *
- * Example:
- *
- * /api/v1/attendance/admin/68c123...?date=2026-10-07
- */
+router.get(
+  "/reports/monthly",
+  authorize(PERMISSIONS.ATTENDANCE_READ),
+  getMonthlyAttendanceReportController,
+);
+
 router.get(
   "/admin/:employeeId",
-
   authorize(PERMISSIONS.ATTENDANCE_READ),
-
   getAttendanceDetailController,
 );
 

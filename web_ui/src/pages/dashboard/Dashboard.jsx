@@ -23,6 +23,7 @@ import {
   Wallet,
   X,
   MapPinned,
+  TrendingUp,
 } from "lucide-react";
 
 import useAuth from "../../hooks/useAuth";
@@ -37,6 +38,9 @@ import OrganizationUnit from "./components/OrganizationUnit";
 import WorkSchedule from "./components/WorkSchedule";
 import Hierarchy from "./components/Hierarchy";
 import AttendanceSettings from "./components/AttendanceSettings";
+import AttendanceRegularization from "./components/AttendanceRegularization";
+import Audit from "./components/Audit";
+import AttendanceReports from "./components/AttendanceReports";
 
 const navigation = [
   {
@@ -86,6 +90,16 @@ const navigation = [
         id: "departments",
         label: "Departments",
         icon: Building2,
+      },
+      {
+        id: "audit",
+        label: "Audit",
+        icon: ShieldCheck,
+      },
+      {
+        id: "attendance-reports",
+        label: "Attendance Reports",
+        icon: TrendingUp,
       },
       {
         id: "organizationUnits",
@@ -254,6 +268,12 @@ const Dashboard = () => {
 
       case "departments":
         return <Department />;
+
+      case "audit":
+        return <Audit />;
+
+      case "attendance-reports":
+        return <AttendanceReports />;
 
       case "organizationUnits":
         return <OrganizationUnit />;
