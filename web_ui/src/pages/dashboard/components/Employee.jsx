@@ -1096,7 +1096,7 @@ const Employee = () => {
                             updateField("firstName", event.target.value)
                           }
                           error={errors.firstName}
-                          placeholder="John"
+                          placeholder="Enter first name"
                         />
 
                         <Input
@@ -1107,7 +1107,7 @@ const Employee = () => {
                             updateField("lastName", event.target.value)
                           }
                           error={errors.lastName}
-                          placeholder="Doe"
+                          placeholder="Enter last name"
                         />
 
                         <Input
@@ -1119,7 +1119,7 @@ const Employee = () => {
                             updateField("email", event.target.value)
                           }
                           error={errors.email}
-                          placeholder="john@example.com"
+                          placeholder="Enter email"
                         />
 
                         <Input
@@ -1130,7 +1130,7 @@ const Employee = () => {
                             updateField("phone", event.target.value)
                           }
                           error={errors.phone}
-                          placeholder="+91 98765 43210"
+                          placeholder="Enter contact number"
                         />
 
                         <Input
@@ -1142,7 +1142,7 @@ const Employee = () => {
                             updateField("password", event.target.value)
                           }
                           error={errors.password}
-                          placeholder="Minimum 8 characters"
+                          placeholder="Enter password"
                         />
 
                         <Input
@@ -1366,7 +1366,7 @@ const Employee = () => {
                               event.target.value,
                             )
                           }
-                          placeholder="+91 98765 43210"
+                          placeholder="Enter alternate contact number"
                         />
 
                         <Input
@@ -1380,7 +1380,7 @@ const Employee = () => {
                               event.target.value,
                             )
                           }
-                          placeholder="personal@example.com"
+                          placeholder="Enter email"
                         />
 
                         <Input
@@ -1448,7 +1448,7 @@ const Employee = () => {
                               event.target.value,
                             )
                           }
-                          placeholder="Delhi"
+                          placeholder="Enter city"
                         />
 
                         <Input
@@ -1461,7 +1461,7 @@ const Employee = () => {
                               event.target.value,
                             )
                           }
-                          placeholder="Delhi"
+                          placeholder="Enter state"
                         />
 
                         <Input
@@ -1486,7 +1486,7 @@ const Employee = () => {
                               event.target.value,
                             )
                           }
-                          placeholder="110001"
+                          placeholder="Enter postal/pin code"
                         />
 
                         <Input
