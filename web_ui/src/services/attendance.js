@@ -5,13 +5,16 @@ export const checkIn = (data) => api.post("/attendance/check-in", data);
 export const checkOut = (data) => api.post("/attendance/check-out", data);
 
 export const getMyAttendance = (params = {}) =>
-  api.get("/attendance/my", { params });
+  api.get("/attendance/my", {
+    params,
+  });
 
-export const getAttendanceSummary = (params = {}) =>
-  api.get("/attendance/summary", { params });
+export const getAttendanceDashboard = (params = {}) =>
+  api.get("/attendance/admin", {
+    params,
+  });
 
-export const getCompanyAttendance = (params = {}) =>
-  api.get("/attendance/company", { params });
-
-export const regularizeAttendance = (data) =>
-  api.patch("/attendance/regularize", data);
+export const getAttendanceDetail = (employeeId, params = {}) =>
+  api.get(`/attendance/admin/${employeeId}`, {
+    params,
+  });
