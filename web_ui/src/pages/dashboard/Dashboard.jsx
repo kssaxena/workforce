@@ -35,6 +35,8 @@ import Access from "./components/Access";
 import Department from "./components/Department";
 import OrganizationUnit from "./components/OrganizationUnit";
 import WorkSchedule from "./components/WorkSchedule";
+import Hierarchy from "./components/Hierarchy";
+import AttendanceSettings from "./components/AttendanceSettings";
 
 const navigation = [
   {
@@ -53,6 +55,11 @@ const navigation = [
       {
         id: "attendance",
         label: "Attendance",
+        icon: ClipboardCheck,
+      },
+      {
+        id: "attendance-settings",
+        label: "Attendance Settings",
         icon: ClipboardCheck,
       },
       {
@@ -236,6 +243,9 @@ const Dashboard = () => {
       case "attendance":
         return <Attendance />;
 
+      case "attendance-settings":
+        return <AttendanceSettings />;
+
       case "payroll":
         return <Payroll />;
 
@@ -250,6 +260,9 @@ const Dashboard = () => {
 
       case "workSchedules":
         return <WorkSchedule />;
+
+      case "hierarchy":
+        return <Hierarchy />;
 
       case "overview":
       default:

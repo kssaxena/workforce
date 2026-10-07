@@ -14,7 +14,7 @@ const addressSchema = Joi.object({
 export const registerCompanySchema = Joi.object({
   company: Joi.object({
     name: Joi.string().trim().min(2).max(150).required(),
-    
+
     legalName: Joi.string().trim().max(200).allow("", null),
 
     registrationNumber: Joi.string().trim().max(100).allow("", null),
@@ -42,3 +42,17 @@ export const registerCompanySchema = Joi.object({
     designation: Joi.string().trim().max(100).allow("", null),
   }).required(),
 });
+
+export const updateAttendanceSettingsSchema = Joi.object({
+  attendanceEnabled: Joi.boolean(),
+
+  gpsAttendanceEnabled: Joi.boolean(),
+
+  attendanceRadius: Joi.number().integer().min(50).max(5000),
+
+  attendanceLocation: Joi.object({
+    latitude: Joi.number().min(-90).max(90).required(),
+
+    longitude: Joi.number().min(-180).max(180).required(),
+  }).allow(null),
+}).min(1);

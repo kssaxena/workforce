@@ -11,6 +11,7 @@ import {
 import {
   getDirectReports,
   getVisibleHierarchy,
+  updateEmployeeReportingManager,
 } from "../services/employeeHierarchy.service.js";
 
 export const createEmployeeController = asyncHandler(async (req, res) => {
@@ -93,3 +94,24 @@ export const getHierarchyController = asyncHandler(async (req, res) => {
       ),
     );
 });
+
+export const updateEmployeeReportingController = asyncHandler(
+  async (req, res) => {
+    const employee = await updateEmployeeReportingManager({
+      userId: req.user.userId,
+      companyId: req.user.companyId,
+      employeeId: req.params.employeeId,
+      reportsTo: req.body.reportsTo,
+    });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          employee,
+          "Reporting manager updated successfully",
+        ),
+      );
+  },
+);
