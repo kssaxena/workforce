@@ -14,11 +14,11 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get("/", authorize(PERMISSIONS.ATTENDANCE_READ), getAuditLogsController);
+router.get("/", authorize(PERMISSIONS.AUDIT_READ), getAuditLogsController);
 
 router.get(
   "/:auditLogId",
-  authorize(PERMISSIONS.ATTENDANCE_READ),
+  authorize(PERMISSIONS.AUDIT_READ),
   getAuditLogController,
 );
 

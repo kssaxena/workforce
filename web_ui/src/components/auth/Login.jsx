@@ -30,11 +30,9 @@ const PORTALS = {
 
 const Login = () => {
   const { type = "employee" } = useParams();
-
   const navigate = useNavigate();
-
-  const { login, loading } = useAuth();
-
+  const { login } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
   const portal = PORTALS[type] || PORTALS.employee;
 
   const [formData, setFormData] = useState({
@@ -56,7 +54,10 @@ const Login = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (submitting) return;
+
     setError("");
+    setSubmitting(true);
 
     try {
       await login({
@@ -64,15 +65,14 @@ const Login = () => {
         portal: type,
       });
 
-      navigate("/dashboard", {
-        replace: true,
-      });
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       setError(
         error?.response?.data?.message ||
-          error?.message ||
-          "Unable to sign in.",
+          "Unable to sign in. Please check your credentials and try again.",
       );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -101,7 +101,6 @@ const Login = () => {
             onChange={handleChange}
             required
           />
-
           <InputBox
             labelName="Password"
             name="password"
@@ -111,19 +110,17 @@ const Login = () => {
             onChange={handleChange}
             required
           />
-
           {error && (
             <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               {error}
             </div>
           )}
-
           <Button
             type="submit"
-            LabelName={loading ? "Signing in..." : "Sign in"}
-            disabled={loading}
+            LabelName={submitting ? "Signing in..." : "Sign in"}
+            disabled={submitting}
             className="mt-5 w-full"
-          />
+          />{" "}
         </form>
 
         <div className="mt-6 text-center text-sm text-slate-500">
