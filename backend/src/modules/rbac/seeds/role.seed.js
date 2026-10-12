@@ -51,6 +51,8 @@ const roleDefinitions = [
       PERMISSIONS.ROLE_UPDATE,
 
       PERMISSIONS.PERMISSION_READ,
+
+      PERMISSIONS.AUDIT_READ,
     ],
   },
 
