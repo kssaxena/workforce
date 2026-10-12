@@ -5,7 +5,7 @@ import { Eyebrow, GlassCard, LocationBadge } from "./Icons";
 
 export default function WorkforceOperationsSection() {
   return (
-    <section id="workforce" className="bg-white">
+    <section id="workforce" className="bg-blue-50">
       <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:py-20">
         <div className="grid items-center gap-10 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
