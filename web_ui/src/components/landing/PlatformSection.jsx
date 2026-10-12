@@ -48,7 +48,7 @@ export default function PlatformSection() {
   const [title, Icon, description] = features[active];
 
   return (
-    <section id="platform" className="bg-white">
+    <section id="platform" className="bg-blue-50">
       <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:py-20">
         <div className="mb-10">
           <Eyebrow>THE PLATFORM</Eyebrow>
