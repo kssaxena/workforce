@@ -12,7 +12,6 @@ import Navbar from "../../components/layout/Navbar";
 const WorkforceOS = () => {
   return (
     <div className="min-h-screen overflow-x-hidden bg-white font-sans text-slate-950 selection:bg-blue-100 selection:text-blue-700">
-      
       <main>
         <HeroSection />
         <FragmentedSection />
