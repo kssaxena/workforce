@@ -260,6 +260,13 @@ const permissionDefinitions = [
     description: "Delete company holidays",
     module: "HOLIDAY",
   },
+  {
+    module: "audit",
+    resource: "audit",
+    action: "read",
+    code: PERMISSIONS.AUDIT_READ,
+    description: "View audit logs",
+  },
 ];
 
 export const seedPermissions = async () => {

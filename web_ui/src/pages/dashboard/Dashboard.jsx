@@ -41,6 +41,7 @@ import AttendanceSettings from "./components/AttendanceSettings";
 import AttendanceRegularization from "./components/AttendanceRegularization";
 import Audit from "./components/Audit";
 import AttendanceReports from "./components/AttendanceReports";
+import EmployeeAttendance from "./components/EmployeeAttendance";
 
 const navigation = [
   {
@@ -155,6 +156,21 @@ const navigation = [
   },
 ];
 
+const PAGE_ACCESS = {
+  overview: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER"],
+  employees: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "TEAM_LEADER"],
+  attendance: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "TEAM_LEADER", "EMPLOYEE"],
+  "attendance-settings": ["SUPER_ADMIN", "HR_ADMIN"],
+  payroll: ["SUPER_ADMIN", "HR_ADMIN"],
+  hierarchy: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "TEAM_LEADER"],
+  departments: ["SUPER_ADMIN", "HR_ADMIN"],
+  audit: ["SUPER_ADMIN", "HR_ADMIN"],
+  "attendance-reports": ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "TEAM_LEADER"],
+  organizationUnits: ["SUPER_ADMIN", "HR_ADMIN"],
+  workSchedules: ["SUPER_ADMIN", "HR_ADMIN"],
+  access: ["SUPER_ADMIN", "HR_ADMIN"],
+};
+
 const pageTitles = {
   overview: {
     title: "Overview",
@@ -228,16 +244,89 @@ const pageTitles = {
 };
 
 const Dashboard = () => {
-  const { user, company, roleCodes, logout } = useAuth();
+  const { user, company, roleCodes = [], logout, hasPermission } = useAuth();
 
-  const [activePage, setActivePage] = useState("overview");
+  const isEmployeeOnly =
+    roleCodes.includes("EMPLOYEE") &&
+    !roleCodes.some((role) =>
+      ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "TEAM_LEADER"].includes(role),
+    );
+
+  const [activePage, setActivePage] = useState(() =>
+    isEmployeeOnly ? "attendance" : "overview",
+  );
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const activeMeta = useMemo(
-    () => pageTitles[activePage] || pageTitles.overview,
-    [activePage],
+  const visibleNavigation = useMemo(
+    () =>
+      navigation
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => {
+            const allowedRoles = PAGE_ACCESS[item.id];
+
+            if (
+              !allowedRoles ||
+              !allowedRoles.some((role) => roleCodes.includes(role))
+            ) {
+              return false;
+            }
+
+            if (item.id === "audit" && !hasPermission("AUDIT_READ")) {
+              return false;
+            }
+
+            if (item.id === "access" && !hasPermission("ROLE_READ")) {
+              return false;
+            }
+
+            if (
+              item.id === "attendance-settings" &&
+              !hasPermission("ATTENDANCE_UPDATE")
+            ) {
+              return false;
+            }
+
+            if (
+              ["departments", "organizationUnits"].includes(item.id) &&
+              !hasPermission("ORGANIZATION_MANAGE")
+            ) {
+              return false;
+            }
+
+            if (
+              item.id === "workSchedules" &&
+              !hasPermission("ATTENDANCE_UPDATE")
+            ) {
+              return false;
+            }
+
+            if (
+              item.id === "attendance-reports" &&
+              !hasPermission("ATTENDANCE_READ")
+            ) {
+              return false;
+            }
+
+            return true;
+          }),
+        }))
+        .filter((group) => group.items.length > 0),
+    [roleCodes, hasPermission],
   );
+
+  const activeMeta = useMemo(() => {
+    if (activePage === "attendance" && isEmployeeOnly) {
+      return {
+        title: "My Attendance",
+        description: "Mark attendance and review your own records.",
+      };
+    }
+
+    return pageTitles[activePage] || pageTitles.overview;
+  }, [activePage, isEmployeeOnly]);
 
   const displayName =
     user?.firstName ||
@@ -255,7 +344,7 @@ const Dashboard = () => {
         return <Employee />;
 
       case "attendance":
-        return <Attendance />;
+        return isEmployeeOnly ? <EmployeeAttendance /> : <Attendance />;
 
       case "attendance-settings":
         return <AttendanceSettings />;
@@ -345,7 +434,7 @@ const Dashboard = () => {
 
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto px-3 py-5">
-          {navigation.map((group) => (
+          {visibleNavigation.map((group) => (
             <div key={group.title} className="mb-7">
               <p className="mb-2 px-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
                 {group.title}

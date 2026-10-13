@@ -14,37 +14,36 @@ import ClosingSection from "../components/landing/ClosingSection.jsx";
 import Footer from "../components/layout/Footer.jsx";
 
 const AppRoutes = () => {
-	const  hideRoutes = ['/dashboard', "/dashboard"]
-	const hideFooter = hideRoutes.includes(location.pathname);
+  const hideRoutes = ["/dashboard", "/dashboard"];
+  const hideFooter = hideRoutes.includes(location.pathname);
+  // const hideHeader = hideRoutes.includes(location.pathname);
 
-	// const hideHeader = hideRoutes.includes(location.pathname);
   return (
-		<div>
-      <Navbar/>
-			<Routes>
-				{/* =========================
+    <div>
+      <Navbar />
+      <Routes>
+        {/* =========================
           PUBLIC
       ========================= */}
 
-				<Route path="/" element={<WorkforceOS />} />
+        <Route path="/" element={<WorkforceOS />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login/:type" element={<LoginPage />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/features" element={<Features />} />
+        <Route path="/solutions" element={<Solutions />} />
 
-				<Route path="/register" element={<RegisterPage />} />
-
-				<Route path="/login/:type" element={<LoginPage />} />
-				<Route path="/about" element={<About />} />
-				<Route path="/features" element={<Features />} />
-				<Route path="/solutions" element={<Solutions />} />
-				{/* =========================
+        {/* =========================
           PROTECTED
       ========================= */}
 
-				<Route element={<ProtectedRoute />}>
-					<Route path="/dashboard" element={<Dashboard />} />
-				</Route>
-			</Routes>
-			{!hideFooter && <Footer />}		
-		</div>
-	);
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
+      </Routes>
+      {!hideFooter && <Footer />}
+    </div>
+  );
 };
 
 export default AppRoutes;
