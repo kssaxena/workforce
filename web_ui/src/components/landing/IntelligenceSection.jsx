@@ -10,22 +10,22 @@ import {
 import { Eyebrow, GlassCard, Pill } from "./Icons";
 
 const stages = [
-  [
-    "HRMS foundation",
-    "Employee records, attendance, leave and payroll create the operational source of truth.",
-  ],
-  [
-    "Workforce network",
-    "Connect roles, locations, teams, field operations and company structures.",
-  ],
-  [
-    "Workforce intelligence",
-    "Turn operational data into trends, alerts, forecasts and recommendations.",
-  ],
-  [
-    "AI workforce platform",
-    "Build proactive workforce experiences on top of real-time organizational context.",
-  ],
+	[
+		"HRMS foundation",
+		"Employee records, attendance, leave and payroll create the operational source of truth.",
+	],
+	[
+		"Workforce network",
+		"Connect roles, locations, teams, field operations and company structures.",
+	],
+	[
+		"Workforce intelligence",
+		"Turn operational data into trends, alerts, forecasts and recommendations.",
+	],
+	[
+		"AI-Powered Business Platform",
+		"Build smarter customer experiences with real-time insights and connected business data.",
+	],
 ];
 
 export default function IntelligenceSection() {

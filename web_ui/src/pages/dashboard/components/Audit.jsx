@@ -266,7 +266,7 @@ const Audit = () => {
             </h1>
 
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-              Review important workforce actions and attendance changes across
+              Review important  actions and attendance changes across
               your organization.
             </p>
           </div>

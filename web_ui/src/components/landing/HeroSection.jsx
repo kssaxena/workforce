@@ -117,7 +117,7 @@ export default function HeroSection() {
 						className="mt-5 max-w-md text-[12px] leading-5 text-slate-500"
 					>
 						One intelligent platform to manage employees, attendance, payroll,
-						field operations and workforce performance — in real time.
+						and daily operations — all in real time.
 					</motion.p>
 					<motion.div
 						variants={fadeUp}

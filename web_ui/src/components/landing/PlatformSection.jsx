@@ -39,7 +39,7 @@ const features = [
   [
     "Workforce Operations",
     BriefcaseBusiness,
-    "Bring day-to-day workforce activity, approvals and workflows into one platform.",
+    "Bring customer interactions, sales activities, approvals, and business workflows together in one platform.",
   ],
 ];
 

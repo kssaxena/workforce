@@ -130,11 +130,11 @@ const Overview = () => {
             </div>
 
             <h2 className="max-w-2xl text-2xl font-black tracking-tight sm:text-3xl">
-              Welcome to your workforce command center.
+              Welcome to your  command center.
             </h2>
 
             <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">
-              Monitor your people, attendance and workforce operations from one
+              Monitor your people, attendance and  operations from one
               place.
             </p>
           </div>
@@ -199,7 +199,7 @@ const Overview = () => {
       <div className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
         <SectionCard
           title="Attendance Overview"
-          description="Daily workforce attendance trends."
+          description="Daily  attendance trends."
           action={
             <button
               type="button"
@@ -257,7 +257,7 @@ const Overview = () => {
                 </p>
 
                 <p className="mt-1 text-[11px] text-slate-400">
-                  Based on today's recorded workforce attendance.
+                  Based on today's recorded  attendance.
                 </p>
               </div>
 
@@ -290,12 +290,12 @@ const Overview = () => {
 
         <SectionCard
           title="Employee Activity"
-          description="Recent workforce activity."
+          description="Recent  activity."
         >
           <EmptyState
             icon={Activity}
             title="No activity yet"
-            description="Employee check-ins, leave requests and workforce events will appear here."
+            description="Employee check-ins, leave requests and  events will appear here."
           />
         </SectionCard>
       </div>
@@ -381,7 +381,7 @@ const Overview = () => {
               },
               {
                 title: "Company Settings",
-                description: "Configure workforce policies.",
+                description: "Configure  policies.",
                 icon: Settings,
               },
             ].map(({ title, description, icon: Icon }) => (

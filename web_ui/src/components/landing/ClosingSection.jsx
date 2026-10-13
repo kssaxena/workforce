@@ -11,19 +11,19 @@ import { CTA, Eyebrow, GlassCard } from "./Icons";
 
 export default function ClosingSection() {
   const cards = [
-    [
-      "One workforce layer",
-      "Employees, attendance, payroll and field operations connected.",
-    ],
-    [
-      "One data foundation",
-      "A real-time operational source of truth for every team.",
-    ],
-    [
-      "One intelligence layer",
-      "Analytics and AI become more useful as workforce context compounds.",
-    ],
-  ];
+		[
+			"One Integrated Solution",
+			"Employees, attendance, payroll and field operations connected.",
+		],
+		[
+			"One data foundation",
+			"A real-time operational source of truth for every team.",
+		],
+		[
+			"One intelligence layer",
+			"Analytics and AI become more powerful as business insights grow..",
+		],
+	];
 
   return (
 		<>
@@ -37,9 +37,9 @@ export default function ClosingSection() {
 								{/* <span className="text-blue-600">HRMS.</span> */}
 							</h2>
 							<p className="mt-4 max-w-lg text-[10px] leading-5 text-slate-500">
-								We are building the infrastructure layer for the modern
-								workforce — a platform that starts with HR operations and
-								expands into real-time workforce intelligence.
+								We are building the foundation for modern business operations —
+								a platform that starts with essential HR processes and evolves
+								into intelligent, real-time business insights.
 							</p>
 						</div>
 						<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -81,11 +81,12 @@ export default function ClosingSection() {
 						<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 							<div>
 								<div className="text-[10px] font-black text-slate-950">
-									An opportunity to build the workforce infrastructure layer.
+									An opportunity to build the foundation for smarter business
+									operations.
 								</div>
 								<div className="mt-1 text-[12px] text-slate-400">
-									Start with your core workforce workflows and expand from
-									there.
+									Start with essential business processes and scale your
+									operations as you grow.
 								</div>
 							</div>
 							<CTA>Book a demo</CTA>

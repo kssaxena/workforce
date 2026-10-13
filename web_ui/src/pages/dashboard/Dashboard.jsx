@@ -172,75 +172,77 @@ const PAGE_ACCESS = {
 };
 
 const pageTitles = {
-  overview: {
-    title: "Overview",
-    description: "Your company's workforce command center.",
-  },
-  employees: {
-    title: "Employees",
-    description: "Manage your workforce and employee profiles.",
-  },
-  attendance: {
-    title: "Attendance",
-    description: "Monitor workforce attendance and daily activity.",
-  },
-  location: {
-    title: "Location Attendance",
-    description: "Monitor GPS-verified workforce attendance.",
-  },
-  field: {
-    title: "Field Workforce",
-    description: "Monitor employees working outside the office.",
-  },
-  payroll: {
-    title: "Payroll",
-    description: "Manage payroll and salary operations.",
-  },
-  hierarchy: {
-    title: "Hierarchy",
-    description: "Manage your organization's reporting structure.",
-  },
-  departments: {
-    title: "Departments",
-    description:
-      "Manage your company's departments and organization structure.",
-  },
-  organizationUnits: {
-    title: "Organization Units",
-    description: "Manage branches, offices, regions and operating units.",
-  },
-  expenses: {
-    title: "Expenses",
-    description: "Review workforce expenses and reimbursements.",
-  },
-  analytics: {
-    title: "Analytics",
-    description: "Understand workforce performance and trends.",
-  },
-  access: {
-    title: "Access & Roles",
-    description: "Manage roles, permissions and platform access.",
-  },
-  "work-schedules": {
-    title: "Work Schedules",
-    description: "Configure working days and schedules.",
-  },
-  holidays: {
-    title: "Holidays",
-    description: "Manage company holidays.",
-  },
-  policies: {
-    title: "Policies",
-    description: "Configure company workforce policies.",
-  },
-  company: {
-    title: "Company Settings",
-    description: "Manage your company configuration.",
-  },
-  workSchedules: {
-    title: "Work Schedules",
-    description: "Configure your work schedules here",
-  },
+	overview: {
+		title: "Overview",
+		description:
+			"Your company's central hub for customer relationships and business operations.",
+	},
+	employees: {
+		title: "Employees",
+		description:
+			"Manage employee profiles, track interactions, and organize employee information in one place.",
+	},
+	attendance: {
+		title: "Attendance",
+		description: "Monitor employee attendance and daily activity.",
+	},
+	location: {
+		title: "Location Attendance",
+		description: "Monitor GPS-verified employee attendance.",
+	},
+	field: {
+		title: "Field Workforce",
+		description: "Monitor employees working outside the office.",
+	},
+	payroll: {
+		title: "Payroll",
+		description: "Manage payroll and salary operations.",
+	},
+	hierarchy: {
+		title: "Hierarchy",
+		description: "Manage your organization's reporting structure.",
+	},
+	departments: {
+		title: "Departments",
+		description:
+			"Manage your company's departments and organization structure.",
+	},
+	organizationUnits: {
+		title: "Organization Units",
+		description: "Manage branches, offices, regions and operating units.",
+	},
+	expenses: {
+		title: "Expenses",
+		description: "Review business expenses and reimbursements.",
+	},
+	analytics: {
+		title: "Analytics",
+		description: "Understand business performance and trends.",
+	},
+	access: {
+		title: "Access & Roles",
+		description: "Manage roles, permissions and platform access.",
+	},
+	"work-schedules": {
+		title: "Work Schedules",
+		description: "Configure working days and schedules.",
+	},
+	holidays: {
+		title: "Holidays",
+		description: "Manage company holidays.",
+	},
+	policies: {
+		title: "Policies",
+		description: "Configure company  policies.",
+	},
+	company: {
+		title: "Company Settings",
+		description: "Manage your company configuration.",
+	},
+	workSchedules: {
+		title: "Work Schedules",
+		description: "Configure your work schedules here",
+	},
 };
 
 const Dashboard = () => {

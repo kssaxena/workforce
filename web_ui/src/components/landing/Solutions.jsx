@@ -21,9 +21,9 @@ const Solutions = () => {
 
 				{/* Description */}
 				<p className="mt-5 text-center max-w-3xl text-sm leading-7 text-slate-500 sm:text-base md:text-lg">
-					From office teams to distributed workforces, simplify operations,
-					improve visibility, and empower your people with solutions built for
-					the way your business works.
+					From customer management to sales and daily operations, streamline
+					workflows, strengthen customer relationships, and drive business
+					growth with solutions tailored to your needs.
 				</p>
 			</div>
 

@@ -7,25 +7,25 @@ import Button from "../common/Button";
 import useAuth from "../../hooks/useAuth";
 
 const PORTALS = {
-  company: {
-    title: "Company Login",
-    description: "Sign in as the company owner or Super Admin.",
-  },
+	company: {
+		title: "Company Login",
+		description: "Sign in as the company owner or Super Admin.",
+	},
 
-  companyTeam: {
-    title: "Company Team Login",
-    description: "Sign in to manage HR and company operations.",
-  },
+	companyTeam: {
+		title: "Company Team Login",
+		description: "Sign in to manage HR and company operations.",
+	},
 
-  manager: {
-    title: "Manager / Team Leader Login",
-    description: "Sign in to manage your assigned workforce.",
-  },
+	manager: {
+		title: "Manager / Team Leader Login",
+		description: "Sign in to access your organization’s workspace.",
+	},
 
-  employee: {
-    title: "Employee Login",
-    description: "Sign in to access your employee workspace.",
-  },
+	employee: {
+		title: "Employee Login",
+		description: "Sign in to access your employee workspace.",
+	},
 };
 
 const Login = () => {

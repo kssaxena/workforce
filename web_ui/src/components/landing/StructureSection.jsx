@@ -39,10 +39,10 @@ export default function StructureSection() {
 					<GlassCard className="overflow-hidden bg-blue-600 p-5 text-white shadow-[0_30px_70px_rgba(37,99,235,.22)]">
 						<div className="mb-5 flex items-center justify-between">
 							<div>
-								<div className="text-[7px] font-bold text-blue-100">
+								<div className="text-[7px] font-bold text-blue-600">
 									WORKFORCE STRUCTURE
 								</div>
-								<div className="text-[13px] font-black">
+								<div className="text-[13px] text-black font-semibold">
 									Reporting hierarchy
 								</div>
 							</div>

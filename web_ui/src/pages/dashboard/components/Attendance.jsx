@@ -1074,7 +1074,7 @@ const Attendance = () => {
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
                 Monitor daily attendance, schedules, check-ins, overtime and
-                workforce availability from one place.
+                 availability from one place.
               </p>
             </div>
 
