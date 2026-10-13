@@ -72,7 +72,7 @@ export default function WorkforceOperationsSection() {
               <div className="mt-1 text-[14px]">Today</div>
               <svg
                 viewBox="0 0 240 130"
-                className="mt-5 h-28 w-full overflow-visible"
+                className="mt-5 h-28 w-full bg-blue-300 overflow-visible"
               >
                 <path
                   d="M8 105 C45 80, 42 35, 78 62 S130 112, 158 60 S205 32, 232 14"

@@ -11,18 +11,20 @@ import {
   fadeUp,
   stagger,
 } from "./Icons";
+import { useNavigate } from "react-router-dom";
+
 
 function DashboardPreview() {
   return (
-    <motion.div
-      initial={{ opacity: 0, rotateY: -10, rotateX: 6, y: 25 }}
-      whileInView={{ opacity: 1, rotateY: -2, rotateX: 2, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 1 }}
-      className="relative [perspective:1000px]"
-    >
-      <div className="absolute -inset-10 rounded-full bg-blue-100/60 blur-3xl" />
-      <GlassCard className="relative overflow-hidden rounded-2xl p-2.5 shadow-[0_35px_80px_rgba(15,96,180,0.20)]">
+		<motion.div
+			initial={{ opacity: 0, rotateY: -10, rotateX: 6, y: 25 }}
+			whileInView={{ opacity: 1, rotateY: -2, rotateX: 2, y: 0 }}
+			viewport={{ once: true }}
+			transition={{ duration: 1 }}
+			className="relative [perspective:1000px]"
+		>
+			<div className="absolute -inset-10 " />
+			{/* <GlassCard className="relative overflow-hidden rounded-2xl p-2.5 shadow-[0_35px_80px_rgba(15,96,180,0.20)]">
         <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2">
           <div className="mb-2 flex items-center justify-between">
             <div>
@@ -74,70 +76,77 @@ function DashboardPreview() {
           </div>
         </div>
       </GlassCard>
-      <LocationBadge />
-    </motion.div>
-  );
+      <LocationBadge /> */}
+			<img
+				src="https://ik.imagekit.io/workforce/HomePageLayout/Aarav%20Sharma%20Workforce%20Dashboard.png"
+				alt=""
+			/>
+		</motion.div>
+	);
 }
 
 export default function HeroSection() {
+  const navigate = useNavigate();
   return (
-    <section
-      id="top"
-      className="relative overflow-hidden bg-gradient-to-b from-cyan-50 via-white to-white"
-    >
-      <div className="absolute right-0 top-0 h-80 w-80 rounded-full bg-blue-100/50 blur-3xl" />
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[0.95fr_1.05fr] lg:py-24">
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-        >
-          <motion.div variants={fadeUp}>
-            <Eyebrow>THE WORKFORCE OPERATING SYSTEM</Eyebrow>
-          </motion.div>
-          <motion.h1
-            variants={fadeUp}
-            className="max-w-xl text-5xl font-black leading-[0.9] tracking-[-0.055em] text-slate-950 sm:text-6xl"
-          >
-            The workforce
-            <br />
-            <span className="text-blue-600">operating</span>
-            <br />
-            system.
-          </motion.h1>
-          <motion.p
-            variants={fadeUp}
-            className="mt-5 max-w-md text-[12px] leading-5 text-slate-500"
-          >
-            One intelligent platform to manage employees, attendance, payroll,
-            field operations and workforce performance — in real time.
-          </motion.p>
-          <motion.div
-            variants={fadeUp}
-            className="mt-6 flex flex-wrap items-center gap-3"
-          >
-            <CTA>Start building</CTA>
-            <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[12px] font-bold text-slate-600">
-              Explore platform
-            </button>
-          </motion.div>
-          <motion.div
-            variants={fadeUp}
-            className="mt-5 flex items-center gap-4 text-[7px] font-semibold text-slate-400"
-          >
-            <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />{" "}
-              Real-time
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />{" "}
-              Enterprise ready
-            </span>
-          </motion.div>
-        </motion.div>
-        <DashboardPreview />
-      </div>
-    </section>
-  );
+		<section
+			id="top"
+			className="relative overflow-hidden bg-gradient-to-b from-cyan-50 via-white to-white"
+		>
+			<div className="absolute right-0 top-0 h-80 w-80 rounded-full bg-blue-100/50 blur-3xl" />
+			<div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[0.95fr_1.05fr] lg:py-24">
+				<motion.div
+					variants={stagger}
+					initial="hidden"
+					whileInView="show"
+					viewport={{ once: true }}
+				>
+					<motion.div variants={fadeUp}>
+						<Eyebrow>THE FUTURE OF WORK MANAGEMENT</Eyebrow>
+					</motion.div>
+					<motion.h1
+						variants={fadeUp}
+						className="max-w-xl text-3xl font-black leading-[0.9] tracking-[-0.055em] text-slate-950 sm:text-6xl"
+					>
+						Make Every Process Smarter and,
+						<br />
+						<span className="text-blue-600">More Efficient.</span>
+						<br />
+					</motion.h1>
+					<motion.p
+						variants={fadeUp}
+						className="mt-5 max-w-md text-[12px] leading-5 text-slate-500"
+					>
+						One intelligent platform to manage employees, attendance, payroll,
+						field operations and workforce performance — in real time.
+					</motion.p>
+					<motion.div
+						variants={fadeUp}
+						className="mt-6 flex flex-wrap items-center gap-3"
+					>
+						{/* <CTA>Book a demo</CTA> */}
+						{/* <button
+							onClick={() => navigate("/about")}
+							className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[12px] font-bold text-slate-600"
+						>
+							Explore platform
+						</button> */}
+					</motion.div>
+					{/* <motion.div
+						variants={fadeUp}
+						className="mt-5 flex items-center gap-4 text-[7px] font-semibold text-slate-400"
+					>
+						<span className="flex items-center gap-1.5">
+							<span className="h-1.5 w-1.5 rounded-full text-[10px] bg-emerald-400" />{" "}
+							Real-time
+						</span>
+						<span className="flex items-center gap-1.5 text-[10px]">
+							<span className="h-1.5 w-1.5 rounded-full bg-blue-500" />{" "}
+							Enterprise ready
+						</span>
+					</motion.div> */}
+				</motion.div>
+				<DashboardPreview />
+			</div>
+		</section>
+	);
 }

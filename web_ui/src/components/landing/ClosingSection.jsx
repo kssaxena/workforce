@@ -26,60 +26,73 @@ export default function ClosingSection() {
   ];
 
   return (
-    <>
-      <section className="bg-white">
-        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:py-20">
-          <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
-            <div>
-              <Eyebrow>THE OPPORTUNITY</Eyebrow>
-              <h2 className="max-w-lg text-4xl font-black leading-[0.95] tracking-[-0.05em] text-slate-950">
-                We are not building another{" "}
-                <span className="text-blue-600">HRMS.</span>
-              </h2>
-              <p className="mt-4 max-w-lg text-[10px] leading-5 text-slate-500">
-                We are building the infrastructure layer for the modern
-                workforce — a platform that starts with HR operations and
-                expands into real-time workforce intelligence.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {[
-                [Boxes, "People"],
-                [Network, "Operations"],
-                [Sparkles, "Intelligence"],
-                [ShieldCheck, "Security"],
-                [Check, "Automation"],
-                [ArrowRight, "Scale"],
-              ].map(([Icon, title]) => (
-                <GlassCard
-                  key={title}
-                  className="flex min-h-20 flex-col justify-between p-3"
-                >
-                  <Icon size={16} className="text-blue-600" />
-                  <span className="text-[14px] font-black text-slate-800">
-                    {title}
-                  </span>
-                </GlassCard>
-              ))}
-            </div>
-          </div>
+		<>
+			<section className="bg-white">
+				<div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:py-20">
+					<div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+						<div>
+							<Eyebrow>WHY BUSINESSES CHOOSE US</Eyebrow>
+							<h2 className="max-w-lg text-4xl font-black leading-[0.95] tracking-[-0.05em] text-slate-950">
+								Build for people. Designed for growth.{" "}
+								{/* <span className="text-blue-600">HRMS.</span> */}
+							</h2>
+							<p className="mt-4 max-w-lg text-[10px] leading-5 text-slate-500">
+								We are building the infrastructure layer for the modern
+								workforce — a platform that starts with HR operations and
+								expands into real-time workforce intelligence.
+							</p>
+						</div>
+						<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+							{[
+								[Boxes, "People", "Better Experience for your team."],
+								[
+									Network,
+									"Efficient Operations",
+									"Save Time, reduce manual work",
+								],
+								[Sparkles, "Intelligence Insight", " data that helps you grow"],
+								[
+									ShieldCheck,
+									"Enterprise-Grade Security",
+									"Your data, always protected",
+								],
+								[Check, "Scalable platform", "Grows with your business"],
+								[
+									ArrowRight,
+									"Dedicated Support",
+									"We're here, whenever you need us.",
+								],
+							].map(([Icon, title, description]) => (
+								<GlassCard
+									key={title}
+									className="flex min-h-20 flex-col justify-between p-4"
+								>
+									<Icon size={16} className="text-blue-600" />
+									<span className="text-[14px] font-black text-slate-800">
+										{title}
+									</span>
+									<p className="text-[10px]">{description}</p>
+								</GlassCard>
+							))}
+						</div>
+					</div>
 
-          <div className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="text-[10px] font-black text-slate-950">
-                  An opportunity to build the workforce infrastructure layer.
-                </div>
-                <div className="mt-1 text-[12px] text-slate-400">
-                  Start with your core workforce workflows and expand from
-                  there.
-                </div>
-              </div>
-              <CTA>Book a demo</CTA>
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
-  );
+					<div className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+						<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+							<div>
+								<div className="text-[10px] font-black text-slate-950">
+									An opportunity to build the workforce infrastructure layer.
+								</div>
+								<div className="mt-1 text-[12px] text-slate-400">
+									Start with your core workforce workflows and expand from
+									there.
+								</div>
+							</div>
+							<CTA>Book a demo</CTA>
+						</div>
+					</div>
+				</div>
+			</section>
+		</>
+	);
 }

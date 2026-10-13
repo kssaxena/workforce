@@ -35,7 +35,7 @@ export default function IntelligenceSection() {
     <section id="intelligence" className="bg-white">
       <div className="mx-auto max-w-6xl px-5 py-4 sm:px-8 lg:py-20">
         <div className="mb-8">
-          <Eyebrow>THE EVOLUTION</Eyebrow>
+          {/* <Eyebrow>THE EVOLUTION</Eyebrow> */}
           <h2 className="text-4xl font-black tracking-[-0.04em] text-slate-950">
             From HRMS to workforce intelligence platform.
           </h2>

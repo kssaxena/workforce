@@ -29,10 +29,7 @@ export default function Navbar() {
 							name: "About",
 							path: "/about",
 						},
-						{
-							name: "Contact",
-							path: "#",
-						},
+						
 						{
 							name: "Features",
 							path: "/features",

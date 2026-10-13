@@ -15,8 +15,7 @@ const Footer = () => {
             <a href="/features">Features</a>
             <a href="/solutions">Solutions</a>
             <a href="#">Pricing</a>
-            <a href="">About Us</a>
-            <a href="#">Contact</a>
+            <a href="/about">About Us</a>
             <a href="/dashboard"> Dashboard </a>
           </div>
           <div className="text-[10px]">© 2026 WorkforceOS</div>

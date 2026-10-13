@@ -17,7 +17,7 @@ const WorkforceOS = () => {
         <FragmentedSection />
         {/* <PlatformSection />
         <RealtimeSection /> */}
-        <WorkforceOperationsSection />
+        {/* <WorkforceOperationsSection /> */}
         {/* <StructureSection /> */}
         {/* <IntelligenceSection /> */}
         {/* <CompaniesSection /> */}
