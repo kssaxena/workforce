@@ -122,6 +122,7 @@ const roleDefinitions = [
       PERMISSIONS.EXPENSE_READ,
 
       PERMISSIONS.ORGANIZATION_READ,
+      PERMISSIONS.EMPLOYEE_DIRECTORY_READ,
     ],
   },
 ];

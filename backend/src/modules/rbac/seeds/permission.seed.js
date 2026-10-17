@@ -267,6 +267,13 @@ const permissionDefinitions = [
     code: PERMISSIONS.AUDIT_READ,
     description: "View audit logs",
   },
+  {
+    module: "employee",
+    resource: "employee-directory",
+    action: "read",
+    code: PERMISSIONS.EMPLOYEE_DIRECTORY_READ,
+    description: "View approved employee directory profiles",
+  },
 ];
 
 export const seedPermissions = async () => {
