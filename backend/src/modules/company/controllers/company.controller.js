@@ -8,6 +8,11 @@ import {
   updateAttendanceSettings,
 } from "../services/companySettings.service.js";
 
+import {
+  getCompanyProfile,
+  updateCompanyProfile,
+} from "../services/companyProfile.service.js";
+
 const registerCompanyController = asyncHandler(async (req, res) => {
   const { company, representative } = req.body;
 
@@ -69,6 +74,32 @@ const updateAttendanceSettingsController = asyncHandler(async (req, res) => {
         settings,
         "Attendance settings updated successfully",
       ),
+    );
+});
+
+export const getCompanyProfileController = asyncHandler(async (req, res) => {
+  const profile = await getCompanyProfile({
+    companyId: req.user.companyId,
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, profile, "Company profile fetched successfully"),
+    );
+});
+
+export const updateCompanyProfileController = asyncHandler(async (req, res) => {
+  const profile = await updateCompanyProfile({
+    companyId: req.user.companyId,
+    userId: req.user.userId,
+    data: req.body,
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, profile, "Company profile updated successfully"),
     );
 });
 
