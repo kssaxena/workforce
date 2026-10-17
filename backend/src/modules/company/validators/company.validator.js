@@ -56,3 +56,30 @@ export const updateAttendanceSettingsSchema = Joi.object({
     longitude: Joi.number().min(-180).max(180).required(),
   }).allow(null),
 }).min(1);
+
+export const updateCompanyProfileSchema = Joi.object({
+  name: Joi.string().trim().min(2).max(150),
+
+  legalName: Joi.string().trim().max(200).allow("", null),
+
+  registrationNumber: Joi.string().trim().max(100).allow("", null),
+
+  email: Joi.string().email().lowercase(),
+
+  phone: Joi.string().trim().max(30).allow("", null),
+
+  website: Joi.string().trim().uri().allow("", null),
+
+  address: Joi.object({
+    addressLine1: Joi.string().trim().max(200),
+    addressLine2: Joi.string().trim().max(200).allow("", null),
+    city: Joi.string().trim().max(100),
+    state: Joi.string().trim().max(100),
+    country: Joi.string().trim().max(100),
+    postalCode: Joi.string().trim().max(20),
+  }).min(1),
+})
+  .min(1)
+  .unknown(false);
+
+  
