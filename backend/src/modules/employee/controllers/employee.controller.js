@@ -14,6 +14,11 @@ import {
   updateEmployeeReportingManager,
 } from "../services/employeeHierarchy.service.js";
 
+import {
+  searchEmployeeDirectory,
+  getDirectoryProfile,
+} from "../services/employeeDirectory.service.js";
+
 export const createEmployeeController = asyncHandler(async (req, res) => {
   const result = await createEmployee({
     companyId: req.user.companyId,
@@ -115,3 +120,54 @@ export const updateEmployeeReportingController = asyncHandler(
       );
   },
 );
+
+export const searchEmployeeDirectoryController = asyncHandler(
+  async (req, res) => {
+    const { departmentId, organizationUnitId } = req.query;
+
+    for (const [label, value] of [
+      ["departmentId", departmentId],
+      ["organizationUnitId", organizationUnitId],
+    ]) {
+      if (value && !mongoose.Types.ObjectId.isValid(value)) {
+        throw new ApiError(400, `Invalid ${label}`);
+      }
+    }
+
+    const result = await searchEmployeeDirectory({
+      companyId: req.user.companyId,
+      search: req.query.search,
+      departmentId,
+      organizationUnitId,
+      page: req.query.page,
+      limit: req.query.limit,
+    });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, result, "Employee directory fetched successfully"),
+      );
+  },
+);
+
+export const getDirectoryProfileController = asyncHandler(async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.employeeId)) {
+    throw new ApiError(400, "Invalid employee ID");
+  }
+
+  const employee = await getDirectoryProfile({
+    companyId: req.user.companyId,
+    employeeId: req.params.employeeId,
+  });
+
+  if (!employee) {
+    throw new ApiError(404, "Directory profile not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, employee, "Directory profile fetched successfully"),
+    );
+});
