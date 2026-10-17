@@ -12,15 +12,32 @@ import Solutions from "../components/landing/Solutions.jsx";
 import Navbar from "../components/layout/Navbar.jsx";
 import ClosingSection from "../components/landing/ClosingSection.jsx";
 import Footer from "../components/layout/Footer.jsx";
+import { useEffect, useState } from "react";
 
 const AppRoutes = () => {
-  const hideRoutes = ["/dashboard", "/dashboard"];
-  const hideFooter = hideRoutes.includes(location.pathname);
-  // const hideHeader = hideRoutes.includes(location.pathname);
+  const [hide, setHide] = useState(false);
+
+  const locationsToDisplay = [
+    "/dashboard",
+    "/",
+    // "/about",
+    // "/features",
+    // "/solutions",
+    // "/login/employee",
+    // "/login/company",
+    // "/login/companyTeam",
+    // "/login/manager",
+  ];
+
+  useEffect(() => {
+    if (locationsToDisplay.includes(window.location.pathname)) {
+      setHide(true);
+    }
+  }, []);
 
   return (
     <div>
-      <Navbar />
+      {hide && <Navbar />}
       <Routes>
         {/* =========================
           PUBLIC
@@ -41,7 +58,7 @@ const AppRoutes = () => {
           <Route path="/dashboard" element={<Dashboard />} />
         </Route>
       </Routes>
-      {!hideFooter && <Footer />}
+      {hide && <Footer />}
     </div>
   );
 };

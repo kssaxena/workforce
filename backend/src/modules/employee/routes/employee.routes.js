@@ -19,6 +19,8 @@ import {
   getDirectReportsController,
   getHierarchyController,
   updateEmployeeReportingController,
+  searchEmployeeDirectoryController,
+  getDirectoryProfileController,
 } from "../controllers/employee.controller.js";
 
 const router = Router();
@@ -60,6 +62,18 @@ router.get(
   "/:employeeId",
   authorize(PERMISSIONS.EMPLOYEE_READ),
   getEmployeeController,
+);
+
+router.get(
+  "/directory",
+  authorize(PERMISSIONS.EMPLOYEE_DIRECTORY_READ),
+  searchEmployeeDirectoryController,
+);
+
+router.get(
+  "/directory/:employeeId",
+  authorize(PERMISSIONS.EMPLOYEE_DIRECTORY_READ),
+  getDirectoryProfileController,
 );
 
 export default router;
