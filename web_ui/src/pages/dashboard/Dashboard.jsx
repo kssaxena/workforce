@@ -42,6 +42,7 @@ import AttendanceRegularization from "./components/AttendanceRegularization";
 import Audit from "./components/Audit";
 import AttendanceReports from "./components/AttendanceReports";
 import EmployeeAttendance from "./components/EmployeeAttendance";
+import CompanyProfile from "./components/CompanyProfile";
 
 const navigation = [
   {
@@ -169,6 +170,7 @@ const PAGE_ACCESS = {
   organizationUnits: ["SUPER_ADMIN", "HR_ADMIN"],
   workSchedules: ["SUPER_ADMIN", "HR_ADMIN"],
   access: ["SUPER_ADMIN", "HR_ADMIN"],
+  company: ["SUPER_ADMIN", "HR_ADMIN"],
 };
 
 const pageTitles = {
@@ -309,6 +311,9 @@ const Dashboard = () => {
             ) {
               return false;
             }
+            if (item.id === "company" && !hasPermission("COMPANY_READ")) {
+              return false;
+            }
 
             return true;
           }),
@@ -372,6 +377,9 @@ const Dashboard = () => {
 
       case "hierarchy":
         return <Hierarchy />;
+
+      case "company":
+        return <CompanyProfile />;
 
       case "overview":
       default:
