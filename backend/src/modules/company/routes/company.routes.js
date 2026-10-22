@@ -1,15 +1,11 @@
 import { Router } from "express";
 
-import registerCompanyController, {
-  getAttendanceSettingsController,
-  updateAttendanceSettingsController,
-} from "../controllers/company.controller.js";
-
 import validate from "../../../core/middleware/validate.js";
 
 import {
   registerCompanySchema,
   updateAttendanceSettingsSchema,
+  updateCompanyProfileSchema,
 } from "../validators/company.validator.js";
 import authenticate from "../../auth/middleware/authenticate.js";
 import authorize from "../../rbac/middleware/authorize.js";
@@ -21,12 +17,6 @@ import registerCompanyController, {
   getCompanyProfileController,
   updateCompanyProfileController,
 } from "../controllers/company.controller.js";
-
-import {
-  registerCompanySchema,
-  updateAttendanceSettingsSchema,
-  updateCompanyProfileSchema,
-} from "../validators/company.validator.js";
 
 const router = Router();
 

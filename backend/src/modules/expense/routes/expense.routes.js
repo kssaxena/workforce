@@ -3,6 +3,8 @@ import { Router } from "express";
 import authenticate from "../../auth/middleware/authenticate.js";
 import authorize from "../../rbac/middleware/authorize.js";
 
+import requireFeature from "../../subscription/middleware/requireFeature.js";
+
 import {
   createCategory,
   getCategories,
@@ -73,8 +75,13 @@ router.patch(
 /*
  * Create draft expense
  */
-router.post("/", authenticate, authorize("EXPENSE_CREATE"), create);
-
+router.post(
+  "/",
+  authenticate,
+  authorize("EXPENSE_CREATE"),
+  requireFeature("expenseManagement"),
+  create,
+);
 /*
  * Get logged-in employee's expenses
  */

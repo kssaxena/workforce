@@ -20,6 +20,8 @@ import {
 
 import { PERMISSIONS } from "../../rbac/constants/permission.js";
 
+import requireFeature from "../../subscription/middleware/requireFeature.js";
+
 const router = express.Router();
 
 router.use(authenticate);
@@ -27,6 +29,7 @@ router.use(authenticate);
 router.post(
   "/",
   authorize(PERMISSIONS.ORGANIZATION_MANAGE),
+  requireFeature("workSchedules"),
   validate(createWorkScheduleSchema),
   createWorkScheduleController,
 );
@@ -46,6 +49,7 @@ router.get(
 router.patch(
   "/:scheduleId",
   authorize(PERMISSIONS.ORGANIZATION_MANAGE),
+  requireFeature("workSchedules"),
   validate(updateWorkScheduleSchema),
   updateWorkScheduleController,
 );
@@ -53,6 +57,7 @@ router.patch(
 router.delete(
   "/:scheduleId",
   authorize(PERMISSIONS.ORGANIZATION_MANAGE),
+  requireFeature("workSchedules"),
   deactivateWorkScheduleController,
 );
 
