@@ -9,6 +9,15 @@ import {
   getCurrentSubscriptionController,
 } from "../controllers/subscription.controller.js";
 
+import validate from "../../../core/middleware/validate.js";
+
+import { createUpgradeRequestSchema } from "../validators/subscription.validator.js";
+
+import {
+  createUpgradeRequestController,
+  getCompanyUpgradeRequestsController,
+} from "../controllers/upgradeRequest.controller.js";
+
 const router = Router();
 
 // Public pricing catalogue.
@@ -20,6 +29,21 @@ router.get(
   authenticate,
   authorize(PERMISSIONS.COMPANY_READ),
   getCurrentSubscriptionController,
+);
+
+router.post(
+  "/upgrade-requests",
+  authenticate,
+  authorize(PERMISSIONS.COMPANY_UPDATE),
+  validate(createUpgradeRequestSchema),
+  createUpgradeRequestController,
+);
+
+router.get(
+  "/upgrade-requests",
+  authenticate,
+  authorize(PERMISSIONS.COMPANY_READ),
+  getCompanyUpgradeRequestsController,
 );
 
 export default router;
