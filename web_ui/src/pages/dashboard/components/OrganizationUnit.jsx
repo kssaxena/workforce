@@ -21,7 +21,6 @@ const initialForm = {
   code: "",
   description: "",
   parentUnitId: "",
-  level: 0,
 };
 
 const OrganizationUnit = () => {
@@ -96,7 +95,10 @@ const OrganizationUnit = () => {
   const getParentUnit = (parentUnitId) => {
     if (!parentUnitId) return null;
 
-    return organizationUnits.find((unit) => unit._id === parentUnitId);
+    const id =
+      typeof parentUnitId === "object" ? parentUnitId._id : parentUnitId;
+
+    return organizationUnits.find((unit) => unit._id === id);
   };
 
   /* =========================================================
@@ -125,8 +127,7 @@ const OrganizationUnit = () => {
       name: unit.name || "",
       code: unit.code || "",
       description: unit.description || "",
-      parentUnitId: unit.parentUnitId || "",
-      level: unit.level ?? 0,
+      parentUnitId: unit.parentUnitId?._id || unit.parentUnitId || "",
     });
 
     setError("");
@@ -186,7 +187,6 @@ const OrganizationUnit = () => {
         code: form.code.trim().toUpperCase(),
         description: form.description?.trim() || "",
         parentUnitId: form.parentUnitId || null,
-        level: Number(form.level) || 0,
       };
 
       if (editingId) {

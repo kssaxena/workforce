@@ -18,16 +18,22 @@ import {
   deactivateDepartment,
 } from "../../../services/organization";
 
+import { getEmployees } from "../../../services/employee";
+
 const emptyForm = {
   name: "",
   code: "",
   description: "",
   parentDepartmentId: "",
+  managerId: "",
 };
 
 const Department = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [employees, setEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
 
   const [search, setSearch] = useState("");
 
@@ -64,6 +70,35 @@ const Department = () => {
     loadDepartments();
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadEmployees = async () => {
+      try {
+        setLoadingEmployees(true);
+
+        const response = await getEmployees();
+        const result = response?.data?.data;
+
+        if (!cancelled) {
+          setEmployees(Array.isArray(result) ? result : []);
+        }
+      } catch (error) {
+        console.error("Failed to load employees for managers:", error);
+
+        if (!cancelled) setEmployees([]);
+      } finally {
+        if (!cancelled) setLoadingEmployees(false);
+      }
+    };
+
+    loadEmployees();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const filteredDepartments = useMemo(() => {
     const value = search.trim().toLowerCase();
 
@@ -94,6 +129,7 @@ const Department = () => {
       name: department.name || "",
       code: department.code || "",
       description: department.description || "",
+      managerId: department.managerId?._id || department.managerId || "",
       parentDepartmentId:
         department.parentDepartmentId?._id ||
         department.parentDepartmentId ||
@@ -134,6 +170,7 @@ const Department = () => {
         code: form.code.trim().toUpperCase(),
         description: form.description.trim(),
         parentDepartmentId: form.parentDepartmentId || null,
+        managerId: form.managerId || null,
       };
 
       if (editingDepartment) {
@@ -550,6 +587,55 @@ const Department = () => {
                         </option>
                       ))}
                   </select>
+                </div>
+
+                {/* Department Manager */}
+                <div>
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-wider text-slate-500">
+                    Department Manager
+                  </label>
+
+                  <select
+                    name="managerId"
+                    value={form.managerId}
+                    onChange={handleChange}
+                    disabled={loadingEmployees}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-600 outline-none focus:border-blue-400 focus:bg-white disabled:opacity-60"
+                  >
+                    <option value="">
+                      {loadingEmployees
+                        ? "Loading employees..."
+                        : "No manager assigned"}
+                    </option>
+
+                    {employees
+                      .filter((employee) => {
+                        const status = employee.employmentStatus;
+
+                        return (
+                          employee.isActive !== false &&
+                          (!status || status === "ACTIVE") &&
+                          employee._id
+                        );
+                      })
+                      .map((employee) => (
+                        <option key={employee._id} value={employee._id}>
+                          {[employee.firstName, employee.lastName]
+                            .filter(Boolean)
+                            .join(" ")}
+                          {" — "}
+                          {employee.employeeCode}
+                          {employee.designation
+                            ? ` (${employee.designation})`
+                            : ""}
+                        </option>
+                      ))}
+                  </select>
+
+                  <p className="mt-1.5 text-[10px] leading-5 text-slate-400">
+                    Only active employees returned by your employee access scope
+                    are available for selection.
+                  </p>
                 </div>
 
                 {/* Description */}

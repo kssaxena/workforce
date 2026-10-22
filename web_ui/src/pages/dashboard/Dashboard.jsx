@@ -43,6 +43,7 @@ import Audit from "./components/Audit";
 import AttendanceReports from "./components/AttendanceReports";
 import EmployeeAttendance from "./components/EmployeeAttendance";
 import CompanyProfile from "./components/CompanyProfile";
+import Subscription from "./components/Subscription";
 
 const navigation = [
   {
@@ -123,6 +124,11 @@ const navigation = [
         label: "Analytics",
         icon: BarChart3,
       },
+      {
+        id: "subscription",
+        label: "Subscription & Plans",
+        icon: CreditCard,
+      },
     ],
   },
   {
@@ -170,6 +176,7 @@ const PAGE_ACCESS = {
   organizationUnits: ["SUPER_ADMIN", "HR_ADMIN"],
   workSchedules: ["SUPER_ADMIN", "HR_ADMIN"],
   access: ["SUPER_ADMIN", "HR_ADMIN"],
+  subscription: ["SUPER_ADMIN", "HR_ADMIN"],
   company: ["SUPER_ADMIN", "HR_ADMIN"],
 };
 
@@ -242,6 +249,10 @@ const pageTitles = {
   workSchedules: {
     title: "Work Schedules",
     description: "Configure your work schedules here",
+  },
+  subscription: {
+    title: "Subscription & Plans",
+    description: "Manage your plan, employee capacity and feature access.",
   },
 };
 
@@ -316,6 +327,9 @@ const Dashboard = () => {
             }
 
             return true;
+            if (item.id === "subscription" && !hasPermission("COMPANY_READ")) {
+              return false;
+            }
           }),
         }))
         .filter((group) => group.items.length > 0),
@@ -380,6 +394,9 @@ const Dashboard = () => {
 
       case "company":
         return <CompanyProfile />;
+
+      case "subscription":
+        return <Subscription />;
 
       case "overview":
       default:
