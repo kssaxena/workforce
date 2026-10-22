@@ -1,70 +1,159 @@
 import mongoose from "mongoose";
 
+import ApiError from "../../../core/errors/ApiError.js";
+import Employee from "../../employee/models/employee.model.js";
 import OrganizationUnit from "../models/organizationUnit.model.js";
 
 const validateObjectId = (id, message) => {
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new Error(message);
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, message);
   }
+};
+
+const findCompanyUnit = async ({ companyId, unitId }) =>
+  OrganizationUnit.findOne({
+    _id: unitId,
+    companyId,
+  });
+
+const validateParentChain = async ({ companyId, unitId, parentUnitId }) => {
+  if (!parentUnitId) return null;
+
+  validateObjectId(parentUnitId, "Invalid parent organization unit");
+
+  const visited = new Set([unitId.toString()]);
+  let currentId = parentUnitId;
+  let parent = null;
+
+  while (currentId) {
+    const currentKey = currentId.toString();
+
+    if (visited.has(currentKey)) {
+      throw new ApiError(
+        400,
+        "Invalid organization hierarchy: circular parent relationship detected",
+      );
+    }
+
+    visited.add(currentKey);
+
+    parent = await OrganizationUnit.findOne({
+      _id: currentId,
+      companyId,
+    }).select("_id name code level parentUnitId isActive");
+
+    if (!parent) {
+      throw new ApiError(
+        404,
+        "Parent organization unit not found in this company",
+      );
+    }
+
+    if (!parent.isActive) {
+      throw new ApiError(400, "An inactive unit cannot be a parent");
+    }
+
+    currentId = parent.parentUnitId;
+  }
+
+  return OrganizationUnit.findOne({
+    _id: parentUnitId,
+    companyId,
+  }).select("_id name code level parentUnitId isActive");
+};
+
+const recalculateDescendantLevels = async ({
+  companyId,
+  parentUnitId,
+  parentLevel,
+  visited = new Set(),
+}) => {
+  const parentKey = parentUnitId.toString();
+
+  if (visited.has(parentKey)) {
+    throw new ApiError(
+      400,
+      "Circular organization hierarchy detected during level recalculation",
+    );
+  }
+
+  visited.add(parentKey);
+
+  const children = await OrganizationUnit.find({
+    companyId,
+    parentUnitId,
+  }).select("_id level");
+
+  for (const child of children) {
+    const expectedLevel = parentLevel + 1;
+
+    if (child.level !== expectedLevel) {
+      child.level = expectedLevel;
+      await child.save();
+    }
+
+    await recalculateDescendantLevels({
+      companyId,
+      parentUnitId: child._id,
+      parentLevel: expectedLevel,
+      visited,
+    });
+  }
+
+  visited.delete(parentKey);
 };
 
 export const createOrganizationUnit = async ({ companyId, userId, data }) => {
   const { name, code, description, parentUnitId } = data;
 
-  if (parentUnitId) {
-    validateObjectId(parentUnitId, "Invalid parent organization unit");
-
-    const parentUnit = await OrganizationUnit.findOne({
-      _id: parentUnitId,
-      companyId,
-      isActive: true,
-    });
-
-    if (!parentUnit) {
-      throw new Error("Parent organization unit not found");
-    }
-  }
-
-  const existingUnit = await OrganizationUnit.findOne({
-    companyId,
-    code: code.toUpperCase(),
-  });
-
-  if (existingUnit) {
-    throw new Error("Organization unit code already exists");
-  }
-
   let level = 0;
 
   if (parentUnitId) {
-    const parentUnit = await OrganizationUnit.findOne({
-      _id: parentUnitId,
+    const parent = await validateParentChain({
       companyId,
-      isActive: true,
-    }).select("level");
+      unitId: "new-unit",
+      parentUnitId,
+    });
 
-    level = parentUnit.level + 1;
+    level = parent.level + 1;
   }
 
-  return OrganizationUnit.create({
+  const normalizedCode = code.toUpperCase();
+
+  const existingUnit = await OrganizationUnit.findOne({
     companyId,
-    name,
-    code: code.toUpperCase(),
-    description,
-    parentUnitId: parentUnitId || null,
-    level,
-    createdBy: userId,
-    updatedBy: userId,
-  });
+    code: normalizedCode,
+  }).select("_id");
+
+  if (existingUnit) {
+    throw new ApiError(409, "Organization unit code already exists");
+  }
+
+  try {
+    return await OrganizationUnit.create({
+      companyId,
+      name,
+      code: normalizedCode,
+      description,
+      parentUnitId: parentUnitId || null,
+      level,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      throw new ApiError(409, "Organization unit code already exists");
+    }
+
+    throw error;
+  }
 };
 
 export const getOrganizationUnits = async ({
   companyId,
   includeInactive = false,
 }) => {
-  const filter = {
-    companyId,
-  };
+  const filter = { companyId };
 
   if (!includeInactive) {
     filter.isActive = true;
@@ -72,25 +161,19 @@ export const getOrganizationUnits = async ({
 
   return OrganizationUnit.find(filter)
     .populate("parentUnitId", "name code level")
-    .sort({
-      level: 1,
-      name: 1,
-    });
+    .sort({ level: 1, name: 1 });
 };
 
 export const getOrganizationUnitById = async ({ companyId, unitId }) => {
   validateObjectId(unitId, "Invalid organization unit ID");
 
-  const unit = await OrganizationUnit.findOne({
-    _id: unitId,
-    companyId,
-  }).populate("parentUnitId", "name code level");
+  const unit = await findCompanyUnit({ companyId, unitId });
 
   if (!unit) {
-    throw new Error("Organization unit not found");
+    throw new ApiError(404, "Organization unit not found");
   }
 
-  return unit;
+  return unit.populate("parentUnitId", "name code level");
 };
 
 export const updateOrganizationUnit = async ({
@@ -101,62 +184,64 @@ export const updateOrganizationUnit = async ({
 }) => {
   validateObjectId(unitId, "Invalid organization unit ID");
 
-  const unit = await OrganizationUnit.findOne({
-    _id: unitId,
-    companyId,
-  });
+  const unit = await findCompanyUnit({ companyId, unitId });
 
   if (!unit) {
-    throw new Error("Organization unit not found");
+    throw new ApiError(404, "Organization unit not found");
   }
 
-  if (data.parentUnitId) {
-    validateObjectId(data.parentUnitId, "Invalid parent organization unit");
+  if (data.parentUnitId !== undefined) {
+    if (data.parentUnitId === null) {
+      unit.parentUnitId = null;
+      unit.level = 0;
+    } else {
+      const parent = await validateParentChain({
+        companyId,
+        unitId,
+        parentUnitId: data.parentUnitId,
+      });
 
-    // Prevent self-parenting.
-    if (data.parentUnitId.toString() === unitId.toString()) {
-      throw new Error("An organization unit cannot be its own parent");
+      unit.parentUnitId = parent._id;
+      unit.level = parent.level + 1;
     }
-
-    const parentUnit = await OrganizationUnit.findOne({
-      _id: data.parentUnitId,
-      companyId,
-      isActive: true,
-    });
-
-    if (!parentUnit) {
-      throw new Error("Parent organization unit not found");
-    }
-
-    // Prevent direct circular hierarchy.
-    if (parentUnit.parentUnitId?.toString() === unitId.toString()) {
-      throw new Error("Invalid organization hierarchy");
-    }
-
-    data.level = parentUnit.level + 1;
   }
 
-  if (data.code) {
+  if (data.code !== undefined) {
+    const normalizedCode = data.code.toUpperCase();
+
     const existingUnit = await OrganizationUnit.findOne({
       companyId,
-      code: data.code.toUpperCase(),
-      _id: {
-        $ne: unitId,
-      },
-    });
+      code: normalizedCode,
+      _id: { $ne: unitId },
+    }).select("_id");
 
     if (existingUnit) {
-      throw new Error("Organization unit code already exists");
+      throw new ApiError(409, "Organization unit code already exists");
     }
 
-    data.code = data.code.toUpperCase();
+    unit.code = normalizedCode;
   }
 
-  Object.assign(unit, data);
+  if (data.name !== undefined) unit.name = data.name;
+  if (data.description !== undefined) unit.description = data.description;
 
   unit.updatedBy = userId;
 
-  await unit.save();
+  try {
+    await unit.save();
+  } catch (error) {
+    if (error.code === 11000) {
+      throw new ApiError(409, "Organization unit code already exists");
+    }
+
+    throw error;
+  }
+
+  await recalculateDescendantLevels({
+    companyId,
+    parentUnitId: unit._id,
+    parentLevel: unit.level,
+  });
 
   return unit;
 };
@@ -168,13 +253,42 @@ export const deactivateOrganizationUnit = async ({
 }) => {
   validateObjectId(unitId, "Invalid organization unit ID");
 
-  const unit = await OrganizationUnit.findOne({
-    _id: unitId,
-    companyId,
-  });
+  const unit = await findCompanyUnit({ companyId, unitId });
 
   if (!unit) {
-    throw new Error("Organization unit not found");
+    throw new ApiError(404, "Organization unit not found");
+  }
+
+  if (!unit.isActive) {
+    return unit;
+  }
+
+  const childUnit = await OrganizationUnit.findOne({
+    companyId,
+    parentUnitId: unit._id,
+  }).select("_id");
+
+  if (childUnit) {
+    throw new ApiError(
+      409,
+      "Cannot deactivate this unit while child organization units reference it. Reassign or remove the child units first.",
+    );
+  }
+
+  const assignedEmployee = await Employee.findOne({
+    companyId,
+    organizationUnitId: unit._id,
+    isActive: true,
+    employmentStatus: {
+      $nin: ["RESIGNED", "TERMINATED"],
+    },
+  }).select("_id");
+
+  if (assignedEmployee) {
+    throw new ApiError(
+      409,
+      "Cannot deactivate this unit while active employees are assigned to it. Reassign the employees first.",
+    );
   }
 
   unit.isActive = false;

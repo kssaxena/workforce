@@ -15,6 +15,8 @@ import { WorkSchedule } from "../../attendance/models/workSchedule.model.js";
 
 import ApiError from "../../../core/errors/ApiError.js";
 
+import { assertEmployeeSeatAvailable } from "../../subscription/services/subscription.service.js";
+
 const validateObjectId = (id, message) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new Error(message);
@@ -48,6 +50,11 @@ export const createEmployee = async ({ companyId, createdBy, data }) => {
         contact,
         address,
       } = data;
+
+      await assertEmployeeSeatAvailable({
+        companyId,
+        session,
+      });
 
       /*
        * ----------------------------------------------------
