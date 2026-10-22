@@ -77,17 +77,33 @@ const companySchema = new mongoose.Schema(
           "GROWTH",
           "ENTERPRISE",
         ],
-        default: "FREE",
+        default: "STARTER",
       },
-      usageRevision: { type: Number, default: 0 },
+
       status: {
         type: String,
         enum: ["TRIAL", "ACTIVE", "PAST_DUE", "CANCELLED", "EXPIRED"],
         default: "TRIAL",
       },
+
+      billingCycle: {
+        type: String,
+        enum: ["MONTHLY", "ANNUAL"],
+        default: null,
+      },
+
       trialEndsAt: { type: Date },
       startsAt: { type: Date },
       expiresAt: { type: Date },
+
+      paymentProvider: {
+        type: String,
+        enum: ["RAZORPAY"],
+        default: null,
+      },
+
+      lastPaymentId: { type: String, default: null },
+      lastPaymentAt: { type: Date, default: null },
     },
 
     /* =========================

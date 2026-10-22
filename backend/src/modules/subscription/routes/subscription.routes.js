@@ -18,10 +18,42 @@ import {
   getCompanyUpgradeRequestsController,
 } from "../controllers/upgradeRequest.controller.js";
 
+import {
+  createPaymentOrderController,
+  verifyPaymentController,
+} from "../controllers/payment.controller.js";
+
+import {
+  createPaymentOrderSchema,
+  verifyPaymentSchema,
+} from "../validators/payment.validator.js";
+
+import { razorpayWebhookController } from "../controllers/razorpayWebhook.controller.js";
+
 const router = Router();
 
 // Public pricing catalogue.
 router.get("/plans", getAvailablePlansController);
+
+// Razorpay authenticates this route with its webhook signature.
+// Do not add user authentication to this endpoint.
+router.post("/webhook/razorpay", razorpayWebhookController);
+
+router.post(
+  "/payment/order",
+  authenticate,
+  authorize(PERMISSIONS.COMPANY_UPDATE),
+  validate(createPaymentOrderSchema),
+  createPaymentOrderController,
+);
+
+router.post(
+  "/payment/verify",
+  authenticate,
+  authorize(PERMISSIONS.COMPANY_UPDATE),
+  validate(verifyPaymentSchema),
+  verifyPaymentController,
+);
 
 // Company-specific subscription and seat usage.
 router.get(
