@@ -104,6 +104,44 @@ const subscriptionChangeRequestSchema = new mongoose.Schema(
       maxlength: 500,
       default: null,
     },
+
+    verificationSource: {
+      type: String,
+      enum: ["CHECKOUT", "WEBHOOK"],
+      default: null,
+    },
+
+    razorpayOrderId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+
+    razorpayPaymentId: {
+      type: String,
+      default: null,
+    },
+
+    razorpaySignatureVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    amountPaise: {
+      type: Number,
+      min: 0,
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: ["NOT_STARTED", "CREATED", "AUTHORIZED", "CAPTURED", "FAILED"],
+      default: "NOT_STARTED",
+    },
+
+    paidAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );
