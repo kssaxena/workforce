@@ -369,10 +369,10 @@ export const getDashboardOverview = async ({ userId, companyId }) => {
     },
 
     payroll: {
-      available: false,
-
+      available: true,
+      status: "DRAFTS_ONLY",
       reason:
-        "Payroll module is not yet available in the current backend modules.",
+        "Payroll draft generation is available. Statutory verification and finalization must be completed before payroll can be finalized.",
     },
 
     departments,
