@@ -28,6 +28,17 @@ const employeeSchema = new mongoose.Schema(
       enum: ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"],
     },
     joiningDate: { type: Date, required: true },
+    exitDate: {
+      type: Date,
+      default: null,
+      validate: {
+        validator(value) {
+          if (!value || !this.joiningDate) return true;
+          return value >= this.joiningDate;
+        },
+        message: "Exit date cannot be earlier than joining date",
+      },
+    },
     employmentType: {
       type: String,
       enum: ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERN", "TEMPORARY"],
