@@ -21,6 +21,9 @@ import {
   prorateMonthlyAmount,
 } from "./payrollCalculation.service.js";
 
+import { calculateEmployeeStatutoryPayroll } from "./statutoryPayroll.service.js";
+import EmployeePayrollProfile from "../models/employeePayrollProfile.model.js";
+
 const BLOCKING = (code, message) => ({
   code,
   message,
@@ -594,6 +597,61 @@ export const generatePayrollDraft = async ({
         totalDeductionsPaise = addMoney(totalDeductionsPaise, amountPaise);
       }
     }
+
+    // Statutory calculation integration
+    // Uses the prorated earnings already calculated above.
+
+    let statutorySnapshot = null;
+
+    try {
+      const employeeProfile = await EmployeePayrollProfile.findOne({
+        companyId,
+        employeeId: employee._id,
+      }).lean();
+
+      if (!employeeProfile) {
+        throw new ApiError(
+          422,
+          `Employee payroll compliance profile is missing for ${employee.employeeCode}`,
+        );
+      }
+
+      if (!complianceProfile?.stateCode) {
+        throw new ApiError(
+          422,
+          "Company Professional Tax jurisdiction is not configured",
+        );
+      }
+
+      // The salary component amounts here have already been prorated.
+      const statutoryComponents = earnings.map((item) => ({
+        code: item.code,
+        amountPaise: item.amountPaise,
+      }));
+
+      // Annual TDS projection and year-to-date tax inputs are not yet
+      // connected in this generator. Do not invent values or assume zero.
+      throw new ApiError(
+        422,
+        "TDS annual projection is not connected yet; statutory payroll cannot be finalized",
+      );
+
+      // Connect calculateEmployeeStatutoryPayroll here once the verified
+      // TDS projection inputs and year-to-date tax ledger are available.
+    } catch (error) {
+      issues.push(
+        BLOCKING(
+          "STATUTORY_CALCULATION_FAILED",
+          error.message || "Statutory payroll calculation failed",
+        ),
+      );
+    }
+
+    // Preserve the existing salary snapshot.
+    // Statutory deductions are added only after all required calculations
+    // succeed, so we cannot accidentally deduct them twice.
+    const statutory = statutorySnapshot?.results ?? null;
+    const statutoryRuleSetVersions = statutorySnapshot?.ruleSetVersions ?? null;
 
     snapshots.push({
       employeeId: employee._id,
