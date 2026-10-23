@@ -9,6 +9,7 @@ import {
   CircleDollarSign,
   ClipboardCheck,
   Clock3,
+  CreditCard,
   FileText,
   LayoutDashboard,
   LocateFixed,
