@@ -147,17 +147,17 @@ const subscriptionChangeRequestSchema = new mongoose.Schema(
 );
 
 // A company can have only one unresolved plan-change request at a time.
-subscriptionChangeRequestSchema.index(
-  { companyId: 1 },
-  {
-    unique: true,
-    partialFilterExpression: {
-      status: {
-        $in: ["PENDING_PAYMENT", "PAYMENT_VERIFICATION"],
-      },
-    },
-  },
-);
+// subscriptionChangeRequestSchema.index(
+//   { companyId: 1 },
+//   {
+//     unique: true,
+//     partialFilterExpression: {
+//       status: {
+//         $in: ["PENDING_PAYMENT", "PAYMENT_VERIFICATION"],
+//       },
+//     },
+//   },
+// );
 
 subscriptionChangeRequestSchema.index({
   companyId: 1,
