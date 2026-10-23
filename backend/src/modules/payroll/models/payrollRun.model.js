@@ -65,6 +65,73 @@ const employeePayrollSnapshotSchema = new Schema(
       ],
       default: [],
     },
+
+    statutory: {
+      type: {
+        EPF: {
+          status: {
+            type: String,
+            enum: ["CALCULATED", "NOT_APPLICABLE", "BLOCKED"],
+            required: true,
+          },
+          wageBasePaise: { type: Number, min: 0, default: 0 },
+          employeeContributionPaise: { type: Number, min: 0, default: 0 },
+          employerContributionPaise: { type: Number, min: 0, default: 0 },
+          epsContributionPaise: { type: Number, min: 0, default: 0 },
+          employerEpfContributionPaise: { type: Number, min: 0, default: 0 },
+          ruleSetVersion: { type: String, default: null },
+        },
+        ESI: {
+          status: {
+            type: String,
+            enum: ["CALCULATED", "NOT_APPLICABLE", "BLOCKED"],
+            required: true,
+          },
+          wageBasePaise: { type: Number, min: 0, default: 0 },
+          employeeContributionPaise: { type: Number, min: 0, default: 0 },
+          employerContributionPaise: { type: Number, min: 0, default: 0 },
+          ruleSetVersion: { type: String, default: null },
+        },
+        PROFESSIONAL_TAX: {
+          status: {
+            type: String,
+            enum: ["CALCULATED", "NOT_APPLICABLE", "BLOCKED"],
+            required: true,
+          },
+          amountPaise: { type: Number, min: 0, default: 0 },
+          ruleSetVersion: { type: String, default: null },
+        },
+        TDS: {
+          status: {
+            type: String,
+            enum: ["CALCULATED", "NOT_APPLICABLE", "BLOCKED"],
+            required: true,
+          },
+          annualTaxLiabilityPaise: { type: Number, min: 0, default: 0 },
+          taxAlreadyDeductedPaise: { type: Number, min: 0, default: 0 },
+          remainingTaxPaise: { type: Number, min: 0, default: 0 },
+          suggestedMonthlyTdsPaise: { type: Number, min: 0, default: 0 },
+          taxYear: { type: String, default: null },
+          taxRegime: {
+            type: String,
+            enum: ["OLD", "NEW", null],
+            default: null,
+          },
+          ruleSetVersion: { type: String, default: null },
+        },
+      },
+      default: undefined,
+    },
+
+    statutoryRuleSetVersions: {
+      type: {
+        EPF: { type: String, default: null },
+        ESI: { type: String, default: null },
+        PROFESSIONAL_TAX: { type: String, default: null },
+        TDS: { type: String, default: null },
+      },
+      default: undefined,
+    },
   },
   { _id: false },
 );
